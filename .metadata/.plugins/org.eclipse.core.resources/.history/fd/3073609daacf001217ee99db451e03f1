@@ -1,0 +1,53 @@
+package edu.brown.cs.ai.behavior.oomdp.optiondiscovery.macros.macrotraining;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import edu.brown.cs.ai.behavior.oomdp.planning.StateConditionTest;
+import edu.umbc.cs.maple.behavior.oomdp.planning.OOMDPPlanner;
+import edu.umbc.cs.maple.oomdp.Action;
+import edu.umbc.cs.maple.oomdp.Attribute;
+import edu.umbc.cs.maple.oomdp.Domain;
+import edu.umbc.cs.maple.oomdp.State;
+
+public class MacroTrainingAgent extends OOMDPPlanner {
+
+	protected Map<String, MacroTrainingPlanner>			tasks;
+	protected List<List<Action>>						macroLevels;
+	protected int										maxDepth;
+	protected MacroTrainingPlanner						curTaskPlanner;
+	
+	
+	public MacroTrainingAgent(Domain d, Map <String, List<Attribute>> attributesForHashCode, int maxDepth){
+		this.MTAInit(d, attributesForHashCode, maxDepth);
+	}
+	
+	
+	protected void MTAInit(Domain d, Map <String, List<Attribute>> attributesForHashCode, int maxDepth){
+		
+		this.PlannerInit(d, null, null, 1., attributesForHashCode);
+		this.maxDepth = maxDepth;
+		this.tasks = new HashMap<String, MacroTrainingPlanner>();
+		this.macroLevels = new ArrayList<List<Action>>();
+		this.macroLevels.add(new ArrayList<Action>(0));
+		
+		curTaskPlanner = null;
+		
+	}
+	
+	
+	public void defineTask(String taskName, StateConditionTest goalCondition){
+		
+	}
+	
+	
+	
+	@Override
+	public void planFromState(State initialState) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

@@ -1,0 +1,41 @@
+package edu.brown.cs.ai.behavior.oomdp.options;
+
+import edu.umbc.cs.maple.oomdp.GroundedAction;
+import edu.umbc.cs.maple.oomdp.State;
+
+public class MacroAction extends Option {
+
+	@Override
+	public boolean isMarkov() {
+		return false;
+	}
+
+	@Override
+	public boolean usesDeterministicTermination() {
+		return true;
+	}
+
+	@Override
+	public boolean usesDeterministicPolicy() {
+		return true;
+	}
+
+	@Override
+	public double probabilityOfTermination(State s, String[] params) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void initiateInStateHelper(State s, String[] params) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public GroundedAction oneStepActionSelection(State s, String[] params) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+}

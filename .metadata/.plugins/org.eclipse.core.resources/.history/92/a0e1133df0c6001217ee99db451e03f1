@@ -1,0 +1,25 @@
+package edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.rollouts;
+
+import java.util.List;
+
+import edu.umbc.cs.maple.oomdp.Action;
+import edu.umbc.cs.maple.oomdp.GroundedAction;
+
+public class FixedPrimitiveOptionWeight implements ActionBias {
+
+	protected double prim;
+	protected double opt;
+	
+	@Override
+	public void setActionSet(List<Action> actions) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public double bias(GroundedAction ga) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+}

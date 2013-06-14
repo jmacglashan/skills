@@ -1,0 +1,18 @@
+package edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.rollouts;
+
+import java.util.List;
+import java.util.Map;
+
+import edu.brown.cs.ai.behavior.oomdp.planning.StateConditionTest;
+import edu.umbc.cs.maple.oomdp.Attribute;
+import edu.umbc.cs.maple.oomdp.Domain;
+import edu.umbc.cs.maple.oomdp.RewardFunction;
+
+public class ABROReset extends ABRSample {
+
+	
+	public ABROReset(Domain domain, RewardFunction rf, StateConditionTest gc, Map <String, List<Attribute>> attributesForHashCode, ActionBias abias){
+		super(domain, rf, gc, attributesForHashCode, abias);
+	}
+	
+}

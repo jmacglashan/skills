@@ -1,0 +1,774 @@
+package edu.brown.cs.ai.experiments.planning.blockdude;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+
+import edu.brown.cs.ai.behavior.oomdp.options.PolicyDefinedSubgoalOption;
+import edu.brown.cs.ai.behavior.oomdp.options.Option;
+import edu.brown.cs.ai.behavior.oomdp.options.OptionEvaluatingRF;
+import edu.brown.cs.ai.behavior.oomdp.planning.StateConditionTest;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.DDPlannerPolicy;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.DeterministicPlanner;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.SDPlannerPolicy;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.SinglePFTF;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.TFGoalCondition;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.UniformCostRF;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.UniformPlusGoalRF;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.Heuristic;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.astar.AStar;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.astar.IDAStar;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.rollouts.ABRSample;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.rollouts.ABRWeightedStates;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.rollouts.ActionBiasedRollout;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.rollouts.FixedPrimitiveOptionWeight;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.rollouts.OptionBiasedAcitons;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.suboptimal.ActionCost;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.suboptimal.DynamicWeightedAStar;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.suboptimal.EqualActionCost;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.suboptimal.EqualActionWeightedGreedy;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.suboptimal.StaticWeightedAStar;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.suboptimal.WeightedGreedy;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.uninformed.bfs.RewardNaiveBFS;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.uninformed.dfs.DFS;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.uninformed.erollouts.ERollouts;
+import edu.brown.cs.ai.behavior.oomdp.planning.stochastic.montecarlo.uct.UCT;
+import edu.brown.cs.ai.behavior.oomdp.planning.stochastic.montecarlo.uct.UCTTreeWalkPolicy;
+import edu.brown.cs.ai.behavior.oomdp.planning.stochastic.montecarlo.uct.deterministic.UCTDeterministic;
+import edu.brown.cs.ai.behavior.oomdp.planning.stochastic.rtdp.RTDP;
+import edu.brown.cs.ai.domain.oomdp.blockdude.Blockdude;
+import edu.brown.cs.ai.domain.oomdp.blockdude.BlockdudeMemReduced;
+import edu.brown.cs.ai.domain.oomdp.blockdude.BlockdudeSP;
+import edu.brown.cs.ai.experiments.planning.blockdude.heuristics.XDHardHeuristic;
+import edu.brown.cs.ai.experiments.planning.blockdude.heuristics.XDHeuristic;
+import edu.brown.cs.ai.experiments.planning.blockdude.stategen.BasicBDSG;
+import edu.brown.cs.ai.experiments.planning.blockdude.stategen.Level2SG;
+import edu.brown.cs.ai.experiments.planning.blockdude.stategen.memreduced.BasicBDMRSG;
+import edu.brown.cs.ai.experiments.planning.blockdude.stategen.memreduced.Level2MRSG;
+import edu.brown.cs.ai.experiments.planning.blockdude.stategen.memreduced.Level2MidStartMRSG;
+import edu.brown.cs.ai.experiments.planning.blockdude.stategen.memreduced.Level7MRSG;
+import edu.brown.cs.ai.experiments.planning.blockdude.tfgc.BDL2SubgoalTF;
+import edu.umbc.cs.maple.behavior.oomdp.EpisodeAnalysis;
+import edu.umbc.cs.maple.behavior.oomdp.Policy;
+import edu.umbc.cs.maple.behavior.oomdp.planning.GreedyQPolicy;
+import edu.umbc.cs.maple.behavior.oomdp.planning.ValueFunctionPlanner;
+import edu.umbc.cs.maple.debugtools.MyTimer;
+import edu.umbc.cs.maple.oomdp.Attribute;
+import edu.umbc.cs.maple.oomdp.Domain;
+import edu.umbc.cs.maple.oomdp.GroundedAction;
+import edu.umbc.cs.maple.oomdp.RewardFunction;
+import edu.umbc.cs.maple.oomdp.State;
+import edu.umbc.cs.maple.oomdp.StateGenerator;
+import edu.umbc.cs.maple.oomdp.TerminalFunction;
+
+public class BlockDudeExp {
+
+	
+	
+	
+	public static Policy subgoalL2P1 = null;
+	
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		//test1(args);
+		//test2(args);
+		test3(args);
+		//test4(args);
+		//test5(args);
+		//testRTDP(args);
+		//testUCT(args);
+
+	}
+	
+	
+	public static void test1(String [] args){
+		//Domain d = (new Blockdude()).generateDomain();
+		Domain d = (new BlockdudeMemReduced()).generateDomain();
+		
+		Heuristic H = new XDHeuristic();
+		//Heuristic H = new NullHeuristic();
+		RewardFunction rf = new UniformCostRF();
+		TerminalFunction tf = new SinglePFTF(d.getPropFunction(Blockdude.PFATEXIT));
+		StateConditionTest gc = new TFGoalCondition(tf);
+		
+		Map<String, List<Attribute>> attMap = new HashMap<String, List<Attribute>>();
+		
+		List<Attribute> agentAtts = new ArrayList<Attribute>();
+		agentAtts.add(d.getAttribute(Blockdude.ATTX));
+		agentAtts.add(d.getAttribute(Blockdude.ATTY));
+		agentAtts.add(d.getAttribute(Blockdude.ATTDIR));
+		agentAtts.add(d.getAttribute(Blockdude.ATTHOLD));
+		
+		attMap.put(Blockdude.CLASSAGENT, agentAtts);
+		
+		List <Attribute> blockAtts = new ArrayList<Attribute>();
+		blockAtts.add(d.getAttribute(Blockdude.ATTX));
+		blockAtts.add(d.getAttribute(Blockdude.ATTY));
+		
+		attMap.put(Blockdude.CLASSBLOCK, blockAtts);
+		
+		//DeterministicPlanner dp = new AStar(d, rf, gc, attMap, H);
+		//DeterministicPlanner dp = new StaticWeightedAStar(d, rf, gc, attMap, H, 7.0);
+		//DeterministicPlanner dp = new DynamicWeightedAStar(d, rf, gc, attMap, H, 7., 94);
+		//DeterministicPlanner dp = new WeightedGreedy(d, rf, gc, attMap, H, 0.1);
+		//DeterministicPlanner dp = new IDAStar(d, rf, gc, attMap, H);
+		//DeterministicPlanner dp = new RewardNaiveBFS(d, rf, gc, attMap);
+		//DeterministicPlanner dp = new ERollouts(d, rf, gc, attMap, -1);
+		DeterministicPlanner dp = new DFS(d, rf, gc, attMap, -1, true, true);
+		Policy p = new SDPlannerPolicy(dp);
+		
+		//StateGenerator sg = new BasicBDSG();
+		//StateGenerator sg = new BasicBDMRSG();
+		//StateGenerator sg = new Level2SG();
+		StateGenerator sg = new Level2MRSG();
+		//StateGenerator sg = new Level7MRSG();
+		
+		State si = sg.generateState();
+		System.out.println("Beginning Planning...");
+		MyTimer timer = new MyTimer();
+		timer.start();
+		dp.planFromState(si);
+		timer.stop();
+		System.out.println("Finished Planning (" + timer.getTime() + ")");
+		System.out.println("Action Sequence:");
+		
+		EpisodeAnalysis ea = p.evaluateBehavior(si, rf, tf);
+		
+		for(GroundedAction ga : ea.actionSequence){
+			System.out.println(ga.toString());
+		}
+		
+		if(args.length == 1){
+			
+			String path = args[0];
+			if(!path.endsWith("/")){
+				path = path + "/";
+			}
+			
+			ea.writeToFile(path + "bd1.episode", new BlockdudeSP());
+		}
+	}
+	
+	public static void test2(String args[]){
+		//Domain d = (new Blockdude()).generateDomain();
+		Domain d = (new BlockdudeMemReduced()).generateDomain();
+		
+		Heuristic H = new XDHardHeuristic(14);
+		RewardFunction rf = new UniformCostRF();
+		TerminalFunction tf = new BDL2SubgoalTF();
+		StateConditionTest gc = new TFGoalCondition(tf);
+		
+		Map<String, List<Attribute>> attMap = new HashMap<String, List<Attribute>>();
+		
+		List<Attribute> agentAtts = new ArrayList<Attribute>();
+		agentAtts.add(d.getAttribute(Blockdude.ATTX));
+		agentAtts.add(d.getAttribute(Blockdude.ATTY));
+		agentAtts.add(d.getAttribute(Blockdude.ATTDIR));
+		agentAtts.add(d.getAttribute(Blockdude.ATTHOLD));
+		
+		attMap.put(Blockdude.CLASSAGENT, agentAtts);
+		
+		List <Attribute> blockAtts = new ArrayList<Attribute>();
+		blockAtts.add(d.getAttribute(Blockdude.ATTX));
+		blockAtts.add(d.getAttribute(Blockdude.ATTY));
+		
+		attMap.put(Blockdude.CLASSBLOCK, blockAtts);
+		
+		DeterministicPlanner dp = new AStar(d, rf, gc, attMap, H);
+		//DeterministicPlanner dp = new IDAStar(d, rf, gc, attMap, H);
+		//DeterministicPlanner dp = new RewardNaiveBFS(d, rf, gc, attMap);
+		Policy p = new DDPlannerPolicy(dp);
+		
+		//StateGenerator sg = new BasicBDSG();
+		//StateGenerator sg = new Level2SG();
+		StateGenerator sg = new Level2MRSG();
+		
+		State si = sg.generateState();
+		System.out.println("Beginning Planning...");
+		MyTimer timer = new MyTimer();
+		timer.start();
+		dp.planFromState(si);
+		timer.stop();
+		System.out.println("Finished Planning (" + timer.getTime() + ")");
+		System.out.println("Action Sequence:");
+		
+		EpisodeAnalysis ea = p.evaluateBehavior(si, rf, tf);
+		
+		for(GroundedAction ga : ea.actionSequence){
+			System.out.println(ga.toString());
+		}
+		
+		if(args.length == 1){
+			
+			String path = args[0];
+			if(!path.endsWith("/")){
+				path = path + "/";
+			}
+			
+			ea.writeToFile(path + "bd2.episode", new BlockdudeSP());
+		}
+	}
+	
+	
+	public static void test3(String [] args){
+		
+		//Domain d = (new Blockdude()).generateDomain();
+		Domain d = (new BlockdudeMemReduced()).generateDomain();
+		
+		Heuristic H = new XDHeuristic();
+		//Heuristic H = new NullHeuristic();
+		RewardFunction rf = new OptionEvaluatingRF(new UniformCostRF());
+		TerminalFunction tf = new SinglePFTF(d.getPropFunction(Blockdude.PFATEXIT));
+		StateConditionTest gc = new TFGoalCondition(tf);
+		
+		Map<String, List<Attribute>> attMap = new HashMap<String, List<Attribute>>();
+		
+		List<Attribute> agentAtts = new ArrayList<Attribute>();
+		agentAtts.add(d.getAttribute(Blockdude.ATTX));
+		agentAtts.add(d.getAttribute(Blockdude.ATTY));
+		agentAtts.add(d.getAttribute(Blockdude.ATTDIR));
+		agentAtts.add(d.getAttribute(Blockdude.ATTHOLD));
+		
+		attMap.put(Blockdude.CLASSAGENT, agentAtts);
+		
+		List <Attribute> blockAtts = new ArrayList<Attribute>();
+		blockAtts.add(d.getAttribute(Blockdude.ATTX));
+		blockAtts.add(d.getAttribute(Blockdude.ATTY));
+		
+		attMap.put(Blockdude.CLASSBLOCK, blockAtts);
+		
+		//DeterministicPlanner dp = new AStar(d, rf, gc, attMap, H);
+		//DeterministicPlanner dp = new StaticWeightedAStar(d, rf, gc, attMap, H, 10.0);
+		//DeterministicPlanner dp = new DynamicWeightedAStar(d, rf, gc, attMap, H, 10., 94);
+		//DeterministicPlanner dp = new WeightedGreedy(d, rf, gc, attMap, H, 0.1);
+		//DeterministicPlanner dp = new ActionCost(d, rf, gc, attMap, H, -10.);
+		//DeterministicPlanner dp = new EqualActionCost(d, rf, gc, attMap, H);
+		//DeterministicPlanner dp = new EqualActionWeightedGreedy(d, rf, gc, attMap, H, 0.1);
+		//DeterministicPlanner dp = new IDAStar(d, rf, gc, attMap, H);
+		//DeterministicPlanner dp = new RewardNaiveBFS(d, rf, gc, attMap);
+		//DeterministicPlanner dp = new ERollouts(d, rf, gc, attMap, -1);
+		//DeterministicPlanner dp = new ABRSample(d, rf, gc, attMap, new OptionBiasedAcitons(1e40));
+		//DeterministicPlanner dp = new DFS(d, rf, gc, attMap, -1, true, true);
+		DeterministicPlanner dp = new ABRWeightedStates(d, rf, gc, attMap, new FixedPrimitiveOptionWeight(0.1, 100000));
+		Policy p = new DDPlannerPolicy(dp);
+		
+		//StateGenerator sg = new BasicBDSG();
+		//StateGenerator sg = new Level2SG();
+		StateGenerator sg = new Level2MRSG();
+		
+		
+		
+		TerminalFunction tfsg = new BDL2SubgoalTF();
+		StateConditionTest sggc = new TFGoalCondition(tfsg);
+		
+		
+		State si = sg.generateState();
+		System.out.println("Beginning Macro Planning...");
+		MyTimer timer = new MyTimer();
+		timer.start();
+		
+		//start by planning out policy for subgoal
+		Policy subgoalPolicy = getL2P1SubgoalPolicy();
+		//create option from it
+		Option o = new PolicyDefinedSubgoalOption("L2P1Subgoal", subgoalPolicy, sggc);
+		dp.addNonDomainReferencedAction(o);
+		
+		//now do planning with macro
+		
+		dp.planFromState(si);
+		timer.stop();
+		System.out.println("Finished Macro Planning (" + timer.getTime() + ")");
+		System.out.println("Action Sequence:");
+		
+		EpisodeAnalysis ea = p.evaluateBehavior(si, rf, tf);
+		
+		for(GroundedAction ga : ea.actionSequence){
+			System.out.println(ga.toString());
+		}
+		
+		if(args.length == 1){
+			
+			String path = args[0];
+			if(!path.endsWith("/")){
+				path = path + "/";
+			}
+			
+			ea.writeToFile(path + "bd3.episode", new BlockdudeSP());
+		}
+		
+		
+	}
+	
+	
+	
+	
+	
+	
+	public static void test4(String [] args){
+		//Domain d = (new Blockdude()).generateDomain();
+		Domain d = (new BlockdudeMemReduced()).generateDomain();
+		
+		Heuristic H = new XDHeuristic();
+		//Heuristic H = new NullHeuristic();
+		RewardFunction rf = new UniformCostRF();
+		TerminalFunction tf = new SinglePFTF(d.getPropFunction(Blockdude.PFATEXIT));
+		StateConditionTest gc = new TFGoalCondition(tf);
+		
+		Map<String, List<Attribute>> attMap = new HashMap<String, List<Attribute>>();
+		
+		List<Attribute> agentAtts = new ArrayList<Attribute>();
+		agentAtts.add(d.getAttribute(Blockdude.ATTX));
+		agentAtts.add(d.getAttribute(Blockdude.ATTY));
+		agentAtts.add(d.getAttribute(Blockdude.ATTDIR));
+		agentAtts.add(d.getAttribute(Blockdude.ATTHOLD));
+		
+		attMap.put(Blockdude.CLASSAGENT, agentAtts);
+		
+		List <Attribute> blockAtts = new ArrayList<Attribute>();
+		blockAtts.add(d.getAttribute(Blockdude.ATTX));
+		blockAtts.add(d.getAttribute(Blockdude.ATTY));
+		
+		attMap.put(Blockdude.CLASSBLOCK, blockAtts);
+		
+		//DeterministicPlanner dp = new AStar(d, rf, gc, attMap, H);
+		//DeterministicPlanner dp = new StaticWeightedAStar(d, rf, gc, attMap, H, 10.0);
+		//DeterministicPlanner dp = new DynamicWeightedAStar(d, rf, gc, attMap, H, 10., 94);
+		//DeterministicPlanner dp = new WeightedGreedy(d, rf, gc, attMap, H, 0.1);
+		//DeterministicPlanner dp = new IDAStar(d, rf, gc, attMap, H);
+		//DeterministicPlanner dp = new RewardNaiveBFS(d, rf, gc, attMap);
+		DeterministicPlanner dp = new ERollouts(d, rf, gc, attMap, -1);
+		Policy p = new SDPlannerPolicy(dp);
+		
+		//StateGenerator sg = new BasicBDSG();
+		//StateGenerator sg = new Level2SG();
+		StateGenerator sg = new Level2MidStartMRSG();
+		
+		State si = sg.generateState();
+		System.out.println("Beginning Planning...");
+		MyTimer timer = new MyTimer();
+		timer.start();
+		dp.planFromState(si);
+		timer.stop();
+		System.out.println("Finished Planning (" + timer.getTime() + ")");
+		System.out.println("Action Sequence:");
+		
+		EpisodeAnalysis ea = p.evaluateBehavior(si, rf, tf);
+		
+		for(GroundedAction ga : ea.actionSequence){
+			System.out.println(ga.toString());
+		}
+		
+		if(args.length == 1){
+			
+			String path = args[0];
+			if(!path.endsWith("/")){
+				path = path + "/";
+			}
+			
+			ea.writeToFile(path + "bd4.episode", new BlockdudeSP());
+		}
+	}
+	
+	
+	
+	public static void test5(String [] args){
+		
+		//Domain d = (new Blockdude()).generateDomain();
+		Domain d = (new BlockdudeMemReduced()).generateDomain();
+		
+		Heuristic H = new XDHeuristic();
+		//Heuristic H = new NullHeuristic();
+		RewardFunction rf = new OptionEvaluatingRF(new UniformCostRF());
+		TerminalFunction tf = new SinglePFTF(d.getPropFunction(Blockdude.PFATEXIT));
+		StateConditionTest gc = new TFGoalCondition(tf);
+		
+		Map<String, List<Attribute>> attMap = new HashMap<String, List<Attribute>>();
+		
+		List<Attribute> agentAtts = new ArrayList<Attribute>();
+		agentAtts.add(d.getAttribute(Blockdude.ATTX));
+		agentAtts.add(d.getAttribute(Blockdude.ATTY));
+		agentAtts.add(d.getAttribute(Blockdude.ATTDIR));
+		agentAtts.add(d.getAttribute(Blockdude.ATTHOLD));
+		
+		attMap.put(Blockdude.CLASSAGENT, agentAtts);
+		
+		List <Attribute> blockAtts = new ArrayList<Attribute>();
+		blockAtts.add(d.getAttribute(Blockdude.ATTX));
+		blockAtts.add(d.getAttribute(Blockdude.ATTY));
+		
+		attMap.put(Blockdude.CLASSBLOCK, blockAtts);
+		
+		//DeterministicPlanner dp = new AStar(d, rf, gc, attMap, H);
+		//DeterministicPlanner dp = new StaticWeightedAStar(d, rf, gc, attMap, H, 7.0);
+		//DeterministicPlanner dp = new DynamicWeightedAStar(d, rf, gc, attMap, H, 10, 94);
+		//DeterministicPlanner dp = new WeightedGreedy(d, rf, gc, attMap, H, 0.1);
+		//DeterministicPlanner dp = new ActionCost(d, rf, gc, attMap, H, -10.);
+		//DeterministicPlanner dp = new EqualActionCost(d, rf, gc, attMap, H);
+		//DeterministicPlanner dp = new EqualActionWeightedGreedy(d, rf, gc, attMap, H, 0.1);
+		//DeterministicPlanner dp = new IDAStar(d, rf, gc, attMap, H);
+		DeterministicPlanner dp = new RewardNaiveBFS(d, rf, gc, attMap);
+		//DeterministicPlanner dp = new ERollouts(d, rf, gc, attMap, -1);
+		//DeterministicPlanner dp = new ABRSample(d, rf, gc, attMap, new OptionBiasedAcitons(1e40));
+		Policy p = new DDPlannerPolicy(dp);
+		
+		//StateGenerator sg = new BasicBDSG();
+		//StateGenerator sg = new Level2SG();
+		StateGenerator sg = new Level2MRSG();
+		
+		
+		
+		StateConditionTest sggc = gc;
+		
+		
+		State si = sg.generateState();
+		System.out.println("Beginning Macro Planning...");
+		MyTimer timer = new MyTimer();
+		timer.start();
+		
+		//start by planning out policy for subgoal
+		Policy subgoalPolicy = getL2P2SubgoalPolicy();
+		//create option from it
+		Option o = new PolicyDefinedSubgoalOption("L2P2Subgoal", subgoalPolicy, sggc);
+		dp.addNonDomainReferencedAction(o);
+		
+		//now do planning with macro
+		
+		dp.planFromState(si);
+		timer.stop();
+		System.out.println("Finished Macro Planning (" + timer.getTime() + ")");
+		System.out.println("Action Sequence:");
+		
+		EpisodeAnalysis ea = p.evaluateBehavior(si, rf, tf);
+		
+		for(GroundedAction ga : ea.actionSequence){
+			System.out.println(ga.toString());
+		}
+		
+		if(args.length == 1){
+			
+			String path = args[0];
+			if(!path.endsWith("/")){
+				path = path + "/";
+			}
+			
+			ea.writeToFile(path + "bd5.episode", new BlockdudeSP());
+		}
+		
+		
+	}
+	
+	
+	public static void testRTDP(String [] args){
+		
+		Domain d = (new BlockdudeMemReduced()).generateDomain();
+		
+		RewardFunction rf = new OptionEvaluatingRF(new UniformCostRF());
+		TerminalFunction tf = new SinglePFTF(d.getPropFunction(Blockdude.PFATEXIT));
+		//GoalCondition gc = new TFGoalCondition(tf);
+		
+		Map<String, List<Attribute>> attMap = new HashMap<String, List<Attribute>>();
+		
+		List<Attribute> agentAtts = new ArrayList<Attribute>();
+		agentAtts.add(d.getAttribute(Blockdude.ATTX));
+		agentAtts.add(d.getAttribute(Blockdude.ATTY));
+		agentAtts.add(d.getAttribute(Blockdude.ATTDIR));
+		agentAtts.add(d.getAttribute(Blockdude.ATTHOLD));
+		
+		attMap.put(Blockdude.CLASSAGENT, agentAtts);
+		
+		List <Attribute> blockAtts = new ArrayList<Attribute>();
+		blockAtts.add(d.getAttribute(Blockdude.ATTX));
+		blockAtts.add(d.getAttribute(Blockdude.ATTY));
+		
+		attMap.put(Blockdude.CLASSBLOCK, blockAtts);
+		
+		ValueFunctionPlanner vfp = new RTDP(d, rf, tf, 0.99, attMap, 600, 17);
+		Policy p = new GreedyQPolicy(vfp);
+		
+		StateGenerator sg = new BasicBDMRSG();
+		
+		State si = sg.generateState();
+		System.out.println("Beginning Planning...");
+		MyTimer timer = new MyTimer();
+		timer.start();
+		vfp.planFromState(si);
+		timer.stop();
+		System.out.println("Finished Planning (" + timer.getTime() + ")");
+		System.out.println("Action Sequence:");
+		
+		EpisodeAnalysis ea = p.evaluateBehavior(si, rf, tf);
+		
+		for(GroundedAction ga : ea.actionSequence){
+			System.out.println(ga.toString());
+		}
+		
+		if(args.length == 1){
+			
+			String path = args[0];
+			if(!path.endsWith("/")){
+				path = path + "/";
+			}
+			
+			ea.writeToFile(path + "bdrtdp.episode", new BlockdudeSP());
+		}
+		
+		
+	}
+	
+	
+	
+	
+	public static void testUCT(String [] args){
+		
+		Domain d = (new BlockdudeMemReduced()).generateDomain();
+		
+		
+		TerminalFunction tf = new SinglePFTF(d.getPropFunction(Blockdude.PFATEXIT));
+		StateConditionTest gc = new TFGoalCondition(tf);
+		RewardFunction rf = new OptionEvaluatingRF(new UniformPlusGoalRF(gc));
+		
+		Map<String, List<Attribute>> attMap = new HashMap<String, List<Attribute>>();
+		
+		List<Attribute> agentAtts = new ArrayList<Attribute>();
+		agentAtts.add(d.getAttribute(Blockdude.ATTX));
+		agentAtts.add(d.getAttribute(Blockdude.ATTY));
+		agentAtts.add(d.getAttribute(Blockdude.ATTDIR));
+		agentAtts.add(d.getAttribute(Blockdude.ATTHOLD));
+		
+		attMap.put(Blockdude.CLASSAGENT, agentAtts);
+		
+		List <Attribute> blockAtts = new ArrayList<Attribute>();
+		blockAtts.add(d.getAttribute(Blockdude.ATTX));
+		blockAtts.add(d.getAttribute(Blockdude.ATTY));
+		
+		attMap.put(Blockdude.CLASSBLOCK, blockAtts);
+		
+		//UCT planner = new UCT(d, rf, tf, 1., attMap, 200, -1, 1);
+		//UCT planner = new UCTDeterministic(d, rf, tf, 1., attMap, 100, -1, 1);
+		//planner.useGoalConditionStopCriteria(gc);
+		//Policy p = new UCTTreeWalkPolicy(planner);
+		
+		DeterministicPlanner planner = new RewardNaiveBFS(d, rf, gc, attMap);
+		Policy p = new SDPlannerPolicy(planner);
+		
+		//StateGenerator sg = new BasicBDMRSG();
+		StateGenerator sg = new Level2MRSG();
+		
+		State si = sg.generateState();
+		System.out.println("Beginning Planning...");
+		MyTimer timer = new MyTimer();
+		timer.start();
+		planner.planFromState(si);
+		timer.stop();
+		System.out.println("Finished Planning (" + timer.getTime() + ")");
+		System.out.println("Action Sequence:");
+		
+		
+		EpisodeAnalysis ea = p.evaluateBehavior(si, rf, tf);
+		
+		for(GroundedAction ga : ea.actionSequence){
+			System.out.println(ga.toString());
+		}
+		
+		if(args.length == 1){
+			
+			String path = args[0];
+			if(!path.endsWith("/")){
+				path = path + "/";
+			}
+			
+			ea.writeToFile(path + "bduct.episode", new BlockdudeSP());
+		}
+		
+		
+		System.out.println("End");
+		
+		
+	}
+	
+	
+	
+	public static int getNumWWeightedWOptions(double prim, double opt){
+		
+		//Domain d = (new Blockdude()).generateDomain();
+		Domain d = (new BlockdudeMemReduced()).generateDomain();
+		
+		RewardFunction rf = new OptionEvaluatingRF(new UniformCostRF());
+		TerminalFunction tf = new SinglePFTF(d.getPropFunction(Blockdude.PFATEXIT));
+		StateConditionTest gc = new TFGoalCondition(tf);
+		
+		Map<String, List<Attribute>> attMap = new HashMap<String, List<Attribute>>();
+		
+		List<Attribute> agentAtts = new ArrayList<Attribute>();
+		agentAtts.add(d.getAttribute(Blockdude.ATTX));
+		agentAtts.add(d.getAttribute(Blockdude.ATTY));
+		agentAtts.add(d.getAttribute(Blockdude.ATTDIR));
+		agentAtts.add(d.getAttribute(Blockdude.ATTHOLD));
+		
+		attMap.put(Blockdude.CLASSAGENT, agentAtts);
+		
+		List <Attribute> blockAtts = new ArrayList<Attribute>();
+		blockAtts.add(d.getAttribute(Blockdude.ATTX));
+		blockAtts.add(d.getAttribute(Blockdude.ATTY));
+		
+		attMap.put(Blockdude.CLASSBLOCK, blockAtts);
+		
+		
+		ActionBiasedRollout dp = new ABRWeightedStates(d, rf, gc, attMap, new FixedPrimitiveOptionWeight(0.1, 100000));
+
+		
+		//StateGenerator sg = new BasicBDSG();
+		//StateGenerator sg = new Level2SG();
+		StateGenerator sg = new Level2MRSG();
+		
+		
+		
+		TerminalFunction tfsg = new BDL2SubgoalTF();
+		StateConditionTest sggc = new TFGoalCondition(tfsg);
+		
+		
+		State si = sg.generateState();
+		System.out.println("Beginning Macro Planning...");
+		MyTimer timer = new MyTimer();
+		timer.start();
+		
+		//start by planning out policy for subgoal
+		Policy subgoalPolicy = getL2P1SubgoalPolicy();
+		//create option from it
+		Option o = new PolicyDefinedSubgoalOption("L2P1Subgoal", subgoalPolicy, sggc);
+		dp.addNonDomainReferencedAction(o);
+		
+		//now do planning with macro
+		
+		dp.planFromState(si);
+		
+		
+		
+		
+		
+	}
+	
+	
+	
+	public static Policy getL2P1SubgoalPolicy(){
+		
+		
+		
+		if(subgoalL2P1 != null){
+			return subgoalL2P1;
+		}
+		
+		
+		//Domain d = (new Blockdude()).generateDomain();
+		Domain d = (new BlockdudeMemReduced()).generateDomain();
+		
+		Heuristic H = new XDHardHeuristic(14);
+		RewardFunction rf = new UniformCostRF();
+		TerminalFunction tf = new BDL2SubgoalTF();
+		StateConditionTest gc = new TFGoalCondition(tf);
+		
+		Map<String, List<Attribute>> attMap = new HashMap<String, List<Attribute>>();
+		
+		List<Attribute> agentAtts = new ArrayList<Attribute>();
+		agentAtts.add(d.getAttribute(Blockdude.ATTX));
+		agentAtts.add(d.getAttribute(Blockdude.ATTY));
+		agentAtts.add(d.getAttribute(Blockdude.ATTDIR));
+		agentAtts.add(d.getAttribute(Blockdude.ATTHOLD));
+		
+		attMap.put(Blockdude.CLASSAGENT, agentAtts);
+		
+		List <Attribute> blockAtts = new ArrayList<Attribute>();
+		blockAtts.add(d.getAttribute(Blockdude.ATTX));
+		blockAtts.add(d.getAttribute(Blockdude.ATTY));
+		
+		attMap.put(Blockdude.CLASSBLOCK, blockAtts);
+		
+		//DeterministicPlanner dp = new AStar(d, rf, gc, attMap, H);
+		//DeterministicPlanner dp = new WeightedGreedy(d, rf, gc, attMap, H, 0.1);
+		//DeterministicPlanner dp = new IDAStar(d, rf, gc, attMap, H);
+		DeterministicPlanner dp = new RewardNaiveBFS(d, rf, gc, attMap);
+		Policy p = new SDPlannerPolicy(dp);
+		
+		//StateGenerator sg = new BasicBDSG();
+		//StateGenerator sg = new Level2SG();
+		StateGenerator sg = new Level2MRSG();
+		
+		State si = sg.generateState();
+		System.out.println("Beginning Subgoal L2P1 Planning...");
+		MyTimer timer = new MyTimer();
+		timer.start();
+		dp.planFromState(si);
+		timer.stop();
+		System.out.println("Finished Subgoal L2P1 Planning (" + timer.getTime() + ")");
+		
+		subgoalL2P1 = p;
+		
+		return p;
+	}
+	
+	public static Policy getL2P2SubgoalPolicy(){
+		
+		//Domain d = (new Blockdude()).generateDomain();
+		Domain d = (new BlockdudeMemReduced()).generateDomain();
+		
+		Heuristic H = new XDHeuristic();
+		RewardFunction rf = new UniformCostRF();
+		TerminalFunction tf = new SinglePFTF(d.getPropFunction(Blockdude.PFATEXIT));
+		StateConditionTest gc = new TFGoalCondition(tf);
+		
+		Map<String, List<Attribute>> attMap = new HashMap<String, List<Attribute>>();
+		
+		List<Attribute> agentAtts = new ArrayList<Attribute>();
+		agentAtts.add(d.getAttribute(Blockdude.ATTX));
+		agentAtts.add(d.getAttribute(Blockdude.ATTY));
+		agentAtts.add(d.getAttribute(Blockdude.ATTDIR));
+		agentAtts.add(d.getAttribute(Blockdude.ATTHOLD));
+		
+		attMap.put(Blockdude.CLASSAGENT, agentAtts);
+		
+		List <Attribute> blockAtts = new ArrayList<Attribute>();
+		blockAtts.add(d.getAttribute(Blockdude.ATTX));
+		blockAtts.add(d.getAttribute(Blockdude.ATTY));
+		
+		attMap.put(Blockdude.CLASSBLOCK, blockAtts);
+		
+		//DeterministicPlanner dp = new AStar(d, rf, gc, attMap, H);
+		//DeterministicPlanner dp = new WeightedGreedy(d, rf, gc, attMap, H, 0.1);
+		//DeterministicPlanner dp = new IDAStar(d, rf, gc, attMap, H);
+		DeterministicPlanner dp = new RewardNaiveBFS(d, rf, gc, attMap);
+		Policy p = new SDPlannerPolicy(dp);
+		
+		//StateGenerator sg = new BasicBDSG();
+		//StateGenerator sg = new Level2SG();
+		StateGenerator sg = new Level2MidStartMRSG();
+		
+		State si = sg.generateState();
+		System.out.println("Beginning Subgoal L2P2 Planning...");
+		MyTimer timer = new MyTimer();
+		timer.start();
+		dp.planFromState(si);
+		timer.stop();
+		System.out.println("Finished Subgoal L2P2 Planning (" + timer.getTime() + ")");
+		
+		return p;
+	}
+	
+	
+	
+	
+	public static class NullHeuristic implements Heuristic{
+
+		@Override
+		public double h(State s) {
+			return 0;
+		}
+		
+		
+		
+	}
+
+}

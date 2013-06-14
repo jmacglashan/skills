@@ -1,0 +1,9 @@
+package edu.brown.cs.ai.behavior.oomdp.options;
+
+import edu.umbc.cs.maple.oomdp.State;
+
+public interface DirectOptionTerminateMapper {
+
+	public State generateOptionTerminalState(State s);
+	
+}

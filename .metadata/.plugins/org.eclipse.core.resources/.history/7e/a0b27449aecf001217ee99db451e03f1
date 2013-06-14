@@ -1,0 +1,29 @@
+package edu.brown.cs.ai.experiments.planning.fourrooms;
+
+import edu.brown.cs.ai.behavior.oomdp.optiondiscovery.macros.macrotraining.MacroTrainingAgent;
+import edu.brown.cs.ai.domain.oomdp.fourrooms.FourRoomsDomain;
+
+public class FourRoomsMacroTrainingExp {
+
+	protected MacroTrainingAgent			mta;
+	
+	
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+	
+	
+	public FourRoomsMacroTrainingExp(){
+		
+		Domain d = (new FourRoomsDomain()).generateDomain();
+		
+		
+	}
+	
+	
+
+}

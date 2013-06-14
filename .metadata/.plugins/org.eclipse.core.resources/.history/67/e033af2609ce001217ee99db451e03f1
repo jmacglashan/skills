@@ -1,0 +1,5 @@
+package edu.brown.cs.ai.behavior.oomdp.optiondiscovery.macros;
+
+public class AllSequenceExtraction {
+
+}

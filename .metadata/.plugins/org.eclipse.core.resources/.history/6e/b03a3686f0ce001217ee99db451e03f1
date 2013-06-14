@@ -1,0 +1,168 @@
+package edu.brown.cs.ai.behavior.oomdp.optiondiscovery.macros;
+
+import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import edu.brown.cs.ai.behavior.oomdp.options.MacroAction;
+import edu.umbc.cs.maple.behavior.oomdp.EpisodeAnalysis;
+import edu.umbc.cs.maple.behavior.oomdp.Policy;
+import edu.umbc.cs.maple.debugtools.DPrint;
+import edu.umbc.cs.maple.oomdp.GroundedAction;
+import edu.umbc.cs.maple.oomdp.RewardFunction;
+import edu.umbc.cs.maple.oomdp.State;
+import edu.umbc.cs.maple.oomdp.TerminalFunction;
+
+public class AllSequenceExtraction {
+
+	
+	
+	public static MacroAction extractLastPrimitiveSetMacro(State s, Policy p, TerminalFunction tf){
+		
+		p.evaluateMethodsShouldDecomposeOption(false);
+		EpisodeAnalysis ea = p.evaluateBehavior(s, new NullReward(), tf);
+		
+		return null;
+	}
+	
+	
+	public static List <MacroAction> getAllMacroSubsequences(int maxSN, State s, Policy p, TerminalFunction tf){
+		
+		return getAllMacroSubsequences(2, maxSN, s, p, tf);
+		
+	}
+	
+	public static List <MacroAction> getAllMacroSubsequences(int minSN, int maxSN, State s, Policy p, TerminalFunction tf){
+		
+		
+		p.evaluateMethodsShouldDecomposeOption(true);
+		p.evaluateMethodsShouldAnnotateOptionDecomposition(false);
+		
+		EpisodeAnalysis ea = p.evaluateBehavior(s, new NullReward(), tf);
+		
+		List <GroundedAction> uniqueIndex = new ArrayList<GroundedAction>();
+		Map <String, Integer> actionToIndex = new HashMap<String, Integer>();
+		
+		getActionIdentifiers(ea.actionSequence, uniqueIndex, actionToIndex);
+		List <Integer> actionIdSequence = convertActionsToIntegers(ea.actionSequence, actionToIndex);
+		
+		Set <String> subsequences = new HashSet<String>();
+		
+		maxSN = Math.min(maxSN, ea.numTimeSteps()-1);
+		
+		for(int i = minSN; i <= maxSN; i++){
+			addUniqueSubsequencesOfSize(i, actionIdSequence, subsequences);
+		}
+		
+		
+		
+		List <MacroAction> macros = new ArrayList<MacroAction>(subsequences.size());
+		for(String uniqueSub : subsequences){
+			List <GroundedAction> subGASeq = getActionSequenceForStringSubsequence(uniqueSub, uniqueIndex);
+			MacroAction macro = new MacroAction("M"+uniqueSub, subGASeq);
+			macros.add(macro);
+		}
+		
+		
+		
+		return macros;
+		
+	}
+	
+	
+	protected static List <GroundedAction> getLastPrimitiveSetSequence(List<GroundedAction> actionSequence){
+		
+		List <GroundedAction> endSeq = new ArrayList<GroundedAction>();
+		
+		int endStart = actionSequence.size();
+		for(int i = actionSequence.size()-1; i >= 0; i--){
+			GroundedAction ga = actionSequence.get(i);
+			if(ga.action.isPrimitive()){
+				endStart = i;
+			}
+			else{
+				break ;
+			}
+		}
+		
+		
+		return endSeq;
+		
+	}
+	
+	
+	protected static void getActionIdentifiers(List <GroundedAction> actionSequence, List <GroundedAction> uniqueIndex, Map<String, Integer> actionToIndex){
+		
+		for(GroundedAction ga : actionSequence){
+			String aname = ga.action.getName();
+
+			if(!actionToIndex.containsKey(aname)){
+				actionToIndex.put(aname, uniqueIndex.size());
+				uniqueIndex.add(ga);
+			}
+		}
+		
+	}
+	
+	protected static List <Integer> convertActionsToIntegers(List <GroundedAction> actionSequnece, Map <String, Integer> actionToIndex){
+		
+		List <Integer> res = new ArrayList<Integer>(actionSequnece.size());
+		
+		for(GroundedAction ga : actionSequnece){
+			res.add(actionToIndex.get(ga.action.getName()));
+		}
+		
+		return res;
+
+	}
+	
+	protected static void addUniqueSubsequencesOfSize(int n , List <Integer> sequence, Set <String> uniqueSubSequences){
+		
+		for(int i = 0; i <= sequence.size()-n; i++){
+			int e = i + n;
+			StringBuffer buf = new StringBuffer(n*2);
+			buf.append(sequence.get(i));
+			for(int j = i+1; j < e; j++){
+				buf.append(",");
+				buf.append(sequence.get(j));
+			}
+			uniqueSubSequences.add(buf.toString());
+		}
+		
+	}
+	
+	protected static List <GroundedAction> getActionSequenceForStringSubsequence(String seq, List <GroundedAction> uniqueIndex){
+		
+		List <GroundedAction> actionSequence = new ArrayList<GroundedAction>();
+		
+		String [] comps = seq.split(",");
+		for(int i = 0; i < comps.length; i++){
+			int ind = Integer.parseInt(comps[i]);
+			actionSequence.add(uniqueIndex.get(ind));
+			DPrint.c(837694, uniqueIndex.get(ind).toString() + "; ");
+		}
+		DPrint.cl(837694, "");
+		
+		return actionSequence;
+		
+	}
+	
+	
+	
+	
+	protected static class NullReward extends RewardFunction{
+
+		@Override
+		public double reward(State s, GroundedAction a, State sprime) {
+			return 0;
+		}
+		
+		
+		
+	}
+	
+}

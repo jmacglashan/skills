@@ -1,0 +1,103 @@
+package edu.brown.cs.ai.behavior.oomdp.learning.qlearning;
+
+import java.util.List;
+import java.util.Map;
+
+import edu.brown.cs.ai.behavior.oomdp.options.Option;
+import edu.umbc.cs.maple.behavior.oomdp.Policy;
+import edu.umbc.cs.maple.behavior.oomdp.QValue;
+import edu.umbc.cs.maple.behavior.oomdp.planning.QComputablePlanner;
+import edu.umbc.cs.maple.behavior.oomdp.planning.StateHashTuple;
+import edu.umbc.cs.maple.oomdp.GroundedAction;
+import edu.umbc.cs.maple.oomdp.State;
+
+public class QLearning extends QComputablePlanner {
+
+	protected Map<StateHashTuple, QLearningStateNode>				qIndex;
+	protected double												qInit;
+	protected double												learningRate;
+	protected Policy												learningPolicy;
+	
+	protected int													maxEpisodeSize;
+	
+	
+	
+	public QLearning() {
+		// TODO Auto-generated constructor stub
+	}
+
+	@Override
+	public List<QValue> getQs(State s) {
+		return this.getQs(this.stateHash(s));
+	}
+
+	@Override
+	public QValue getQ(State s, GroundedAction a) {
+		return this.getQ(this.stateHash(s), a);
+	}
+	
+	
+
+	protected List<QValue> getQs(StateHashTuple s) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	protected QValue getQ(StateHashTuple s, GroundedAction a) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	protected double getMaxQ(StateHashTuple s){
+		List <QValue> qs = this.getQs(s);
+		double max = Double.NEGATIVE_INFINITY;
+		for(QValue q : qs){
+			if(q.q > max){
+				max = q.q;
+			}
+		}
+		return max;
+	}
+
+	@Override
+	public void planFromState(State initialState) {
+		
+		StateHashTuple curState = this.stateHash(initialState);
+		int eCounter = 0;
+		
+		while(tf.isTerminal(curState.s) && eCounter < maxEpisodeSize){
+			
+			GroundedAction action = learningPolicy.getAction(curState.s);
+			QValue curQ = this.getQ(curState, action);
+			
+			StateHashTuple nextState = this.stateHash(action.executeIn(curState.s));
+			double maxQ = this.getMaxQ(nextState);
+			
+			//manage option specifics
+			double r = 0.;
+			double discount = this.gamma;
+			if(action.action.isPrimitive()){
+				r = rf.reward(curState.s, action, nextState.s);
+			}
+			else{
+				Option o = (Option)action.action;
+				r = o.getLastCumulativeReward();
+				int n = o.getLastNumSteps();
+				discount = Math.pow(this.gamma, n);
+			}
+			
+			
+			//update Q-value
+			curQ.q = curQ.q + this.learningRate * (r + (discount * maxQ) - curQ.q);
+			
+			//move on
+			curState = nextState;
+			
+			eCounter++;
+		}
+		
+
+	}
+
+}

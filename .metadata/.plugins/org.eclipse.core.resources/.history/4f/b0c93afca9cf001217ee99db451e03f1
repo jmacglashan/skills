@@ -1,0 +1,31 @@
+package edu.brown.cs.ai.behavior.oomdp.optiondiscovery.macros.macrotraining;
+
+import java.util.List;
+import java.util.Map;
+
+import edu.umbc.cs.maple.behavior.oomdp.planning.OOMDPPlanner;
+import edu.umbc.cs.maple.oomdp.Action;
+import edu.umbc.cs.maple.oomdp.Attribute;
+import edu.umbc.cs.maple.oomdp.State;
+
+public class MacroTrainingAgent extends OOMDPPlanner {
+
+	protected Map<String, MacroTrainingPlanner>			tasks;
+	protected List<List<Action>>						macroLevels;
+	protected int										maxDepth;
+	
+	
+	
+	protected void MTAInit(Domain d, Map <String, List<Attribute>> attributesForHashCode, int maxDepth){
+		
+		
+		
+	}
+	
+	@Override
+	public void planFromState(State initialState) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

@@ -1,0 +1,11 @@
+1364316943958	Rename package 'edu.brown.cs.ai.experimens'
+1364317371155	Rename type 'GoalBasedCostRF'
+1364317385220	Delete element
+1364319675916	Delete elements
+1364319721837	Delete element
+1364407243404	Rename type 'BasicSG'
+1364414431094	Rename local variable 'py'
+1364414675468	Move compilation unit
+1364420977822	Move compilation unit
+1364485911604	Rename local variable 'maxCR'
+1364505479099	Rename method 'clearMap'

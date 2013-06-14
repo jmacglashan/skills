@@ -1,0 +1,52 @@
+package edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.rollouts;
+
+import java.util.List;
+import java.util.Map;
+
+import edu.brown.cs.ai.behavior.oomdp.planning.StateConditionTest;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.SearchNode;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.PrioritizedSearchNode;
+import edu.umbc.cs.maple.behavior.oomdp.planning.StateHashTuple;
+import edu.umbc.cs.maple.oomdp.Attribute;
+import edu.umbc.cs.maple.oomdp.Domain;
+import edu.umbc.cs.maple.oomdp.GroundedAction;
+import edu.umbc.cs.maple.oomdp.RewardFunction;
+
+public class ABRDLSample extends ABRSample {
+
+	protected int maxDepth;
+	
+	public ABRDLSample(Domain domain, RewardFunction rf, StateConditionTest gc,
+			Map<String, List<Attribute>> attributesForHashCode, ActionBias abias, int maxDepth) {
+		super(domain, rf, gc, attributesForHashCode, abias);
+	}
+
+	
+	
+	
+	
+	
+	
+	protected static class DepthTrackingPrioritizedSearchNode extends PrioritizedSearchNode{
+		
+		public int depth;
+		
+		public DepthTrackingPrioritizedSearchNode(StateHashTuple s, double p){
+			super(s,p);
+			this.depth = 0;
+		}
+		
+		
+		public DepthTrackingPrioritizedSearchNode(StateHashTuple s, GroundedAction ga, double p, int d){
+			super(s,ga,p);
+		}
+		
+		public DepthTrackingPrioritizedSearchNode(StateHashTuple s, GroundedAction ga, SearchNode bp, double p, int d){
+			super(s,ga,bp,p);
+		}
+		
+		
+	}
+	
+
+}

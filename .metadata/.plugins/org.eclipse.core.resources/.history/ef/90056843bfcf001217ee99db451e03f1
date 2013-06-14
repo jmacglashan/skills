@@ -1,0 +1,40 @@
+package edu.brown.cs.ai.behavior.oomdp.planning.deterministc.uninformed.dfs;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import edu.brown.cs.ai.behavior.oomdp.planning.StateConditionTest;
+import edu.umbc.cs.maple.behavior.oomdp.planning.StateHashTuple;
+import edu.umbc.cs.maple.oomdp.Attribute;
+import edu.umbc.cs.maple.oomdp.Domain;
+import edu.umbc.cs.maple.oomdp.RewardFunction;
+import edu.umbc.cs.maple.oomdp.State;
+
+public class LimitedMemoryDFS extends DFS {
+
+	protected int									memorySize;
+	protected LinkedList<StateHashTuple>			memoryQueue;
+	protected Map <StateHashTuple, Integer>			memoryStateDepth;
+	
+	
+	
+	public LimitedMemoryDFS(Domain domain, RewardFunction rf, StateConditionTest gc, Map<String, List<Attribute>> attributesForHashCode, int maxDepth, 
+			boolean maintainClosed, boolean optionsFirst, int memorySize) {
+		super(domain, rf, gc, attributesForHashCode, maxDepth, maintainClosed,
+				optionsFirst);
+		
+		this.memorySize = memorySize;
+		
+	}
+	
+	
+	
+	@Override
+	public void planFromState(State initialState){
+		
+		
+		
+	}
+
+}

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<typeInfoHistroy>
+<typeInfo handle="=subgoalskills/src&lt;edu.brown.cs.ai.behavior.oomdp.planning.deterministc{SearchNode.java[SearchNode" modifiers="1" timestamp="1364420637000"/>
+<typeInfo handle="=subgoalskills/src&lt;edu.umbc.cs.maple.behavior.oomdp{Policy.java[Policy" modifiers="1025" timestamp="1367765044000"/>
+<typeInfo handle="=subgoalskills/src&lt;edu.umbc.cs.maple.oomdp{StateGenerator.java[StateGenerator" modifiers="513" timestamp="1359300075000"/>
+<typeInfo handle="=subgoalskills/src&lt;edu.umbc.cs.maple.oomdp{StateParser.java[StateParser" modifiers="513" timestamp="1335281697000"/>
+<typeInfo handle="=subgoalskills/src&lt;edu.umbc.cs.maple.oomdp{Action.java[Action" modifiers="1025" timestamp="1364923066000"/>
+<typeInfo handle="=subgoalskills/src&lt;edu.umbc.cs.maple.oomdp{RewardFunction.java[RewardFunction" modifiers="1025" timestamp="1364915301000"/>
+<typeInfo handle="=subgoalskills/src&lt;edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed{Heuristic.java[Heuristic" modifiers="513" timestamp="1363975025000"/>
+<typeInfo handle="=subgoalskills/src&lt;edu.umbc.cs.maple.oomdp{TerminalFunction.java[TerminalFunction" modifiers="1025" timestamp="1361225740000"/>
+<typeInfo handle="=subgoalskills/src&lt;edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.astar{AStar.java[AStar" modifiers="1" timestamp="1367764961000"/>
+<typeInfo handle="=subgoalskills/src&lt;edu.umbc.cs.maple.domain.oomdp{DomainGenerator.java[DomainGenerator" modifiers="513" timestamp="1332269804000"/>
+<typeInfo handle="=subgoalskills/src&lt;edu.brown.cs.ai.behavior.oomdp.options{Option.java[Option" modifiers="1025" timestamp="1367867896000"/>
+<typeInfo handle="=subgoalskills/\/System\/Library\/Java\/JavaVirtualMachines\/1.6.0.jdk\/Contents\/Classes\/classes.jar&lt;java.lang(Iterable.class[Iterable" modifiers="1537" timestamp="1362187376000"/>
+<typeInfo handle="=subgoalskills/src&lt;edu.brown.cs.ai.behavior.oomdp.planning{StateConditionTestIterable.java[StateConditionTestIterable" modifiers="513" timestamp="1367860222000"/>
+<typeInfo handle="=subgoalskills/\/System\/Library\/Java\/JavaVirtualMachines\/1.6.0.jdk\/Contents\/Classes\/classes.jar&lt;sun.security.provider.certpath(State.class[State" modifiers="1536" timestamp="1362187376000"/>
+<typeInfo handle="=subgoalskills/src&lt;edu.brown.cs.ai.behavior.oomdp.planning{StateConditionTest.java[StateConditionTest" modifiers="513" timestamp="1367764962000"/>
+<typeInfo handle="=subgoalskills/src&lt;edu.brown.cs.ai.behavior.oomdp.planning{StateMapping.java[StateMapping" modifiers="513" timestamp="1367867747000"/>
+<typeInfo handle="=subgoalskills/src&lt;edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.rollouts{ActionBiasedRollout.java[ActionBiasedRollout" modifiers="1025" timestamp="1367962180000"/>
+<typeInfo handle="=subgoalskills/src&lt;edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.rollouts{ActionBias.java[ActionBias" modifiers="513" timestamp="1367956684000"/>
+<typeInfo handle="=subgoalskills/src&lt;edu.brown.cs.ai.behavior.oomdp.planning.deterministc{DeterministicPlanner.java[DeterministicPlanner" modifiers="1025" timestamp="1367946125000"/>
+</typeInfoHistroy>

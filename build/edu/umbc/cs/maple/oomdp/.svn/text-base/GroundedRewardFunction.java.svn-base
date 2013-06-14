@@ -1,0 +1,24 @@
+package edu.umbc.cs.maple.oomdp;
+
+import java.util.Set;
+
+//A grounded reward function is simply a linear combination of RewardFunctions
+//these can also be GRFs
+public class GroundedRewardFunction extends RewardFunction {
+	public Set<RewardFunction> components_;	//the RFs (or GRFs) which comprise this GRF
+	
+	public GroundedRewardFunction(Domain domain) {
+		super(domain);
+	}
+
+	//computing the reward for a GRF as defined here simply means to return the linear
+	//combination of rewards from each of the children RFs
+	@Override
+	public double reward(State s, String a, String[] params, State sprime) {
+		//compute the sum of the rewards
+		double returnval = 0.;
+		for(RewardFunction rewardFunction : components_)
+			returnval += rewardFunction.reward(s, a, params, sprime);
+		return returnval;
+	}
+}

@@ -1,0 +1,9 @@
+package edu.brown.cs.ai.behavior.oomdp.learning.qlearning;
+
+public class QLearningStateNode {
+
+	public QLearningStateNode() {
+		// TODO Auto-generated constructor stub
+	}
+
+}

@@ -1,0 +1,134 @@
+package edu.brown.cs.ai.experiments.planning.fourrooms;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import edu.brown.cs.ai.behavior.oomdp.learning.EpsilonGreedy;
+import edu.brown.cs.ai.behavior.oomdp.learning.GoalBasedRF;
+import edu.brown.cs.ai.behavior.oomdp.learning.qlearning.QLearning;
+import edu.brown.cs.ai.behavior.oomdp.planning.StateConditionTest;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.SinglePFTF;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.TFGoalCondition;
+import edu.brown.cs.ai.domain.oomdp.fourrooms.FourRoomsDomain;
+import edu.umbc.cs.maple.behavior.oomdp.planning.GreedyQPolicy;
+import edu.umbc.cs.maple.genericalgorithms.RandomFactory;
+import edu.umbc.cs.maple.oomdp.Attribute;
+import edu.umbc.cs.maple.oomdp.Domain;
+import edu.umbc.cs.maple.oomdp.RewardFunction;
+import edu.umbc.cs.maple.oomdp.State;
+import edu.umbc.cs.maple.oomdp.StateGenerator;
+import edu.umbc.cs.maple.oomdp.TerminalFunction;
+
+public class FourRoomsQLExp {
+
+	
+	Domain 									d;
+	Map <String, List<Attribute>> 			attributesForHashCode;
+	
+	
+	
+
+	public static void main(String[] args) {
+		
+		FourRoomsQLExp exp = new FourRoomsQLExp();
+
+	}
+	
+	
+	public FourRoomsQLExp() {
+		d = (new FourRoomsDomain()).generateDomain();
+		
+		attributesForHashCode = new HashMap<String, List<Attribute>>();
+		
+		List <Attribute> agentAtts = new ArrayList<Attribute>();
+		agentAtts.add(d.getAttribute(FourRoomsDomain.ATTX));
+		agentAtts.add(d.getAttribute(FourRoomsDomain.ATTY));
+		attributesForHashCode.put(FourRoomsDomain.CLASSAGENT, agentAtts);
+		
+		List <Attribute> goalAtts = new ArrayList<Attribute>(agentAtts);
+		attributesForHashCode.put(FourRoomsDomain.CLASSGOAL, goalAtts);
+	}
+
+	
+	
+	public QLearning getBasicAgent(double qInit){
+		
+		TerminalFunction tf = new SinglePFTF(d.getPropFunction(FourRoomsDomain.PFATGOAL));
+		StateConditionTest gc = new TFGoalCondition(tf);
+		RewardFunction rf = new GoalBasedRF(d, gc);
+		EpsilonGreedy p = new EpsilonGreedy(null, .1);
+		
+		
+		double learningRate = 0.2;
+		double gamma = 0.9;
+		int maxSteps = 100000;
+		
+		
+		return null;
+		
+	}
+	
+	
+	public void printPerformance(QLearning agent, StateGenerator sg, int numEps){
+		
+		for(int i = 0; i < numEps; i++){
+			
+			State s = sg.generateState();
+			agent.planFromState(s);
+			System.out.println(agent.getLastNumSteps());
+			
+		}
+		
+	}
+	
+	
+	
+	static class FRRangeStateGen implements StateGenerator{
+
+		int l;
+		int r;
+		int b;
+		int t;
+		int gx;
+		int gy;
+		
+		Random rand;
+		
+		
+		public FRRangeStateGen(int l, int r, int b, int t, int gx, int gy){
+			this.l = l;
+			this.r = r;
+			this.b = b;
+			this.t = t;
+			
+			this.gx = gx;
+			this.gy = gy;
+			
+			this.rand = RandomFactory.getMapped(0);
+		}
+		
+		
+		@Override
+		public State generateState() {
+			
+			State s = FourRoomsDomain.getCleanState();
+			FourRoomsDomain.setGoal(s, gx, gy);
+			
+			int ax = rand.nextInt(r-l+1) + l;
+			int ay = rand.nextInt(t-b+1) + b;
+			
+			FourRoomsDomain.setAgent(s, ax, ay);
+
+			return s;
+		}
+		
+		
+		
+		
+	}
+	
+
+}

@@ -1,0 +1,51 @@
+package edu.brown.cs.ai.behavior.oomdp.planning.deterministc.uninformed;
+
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.DeterministicPlanner;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.GoalCondition;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.SearchNode;
+import edu.umbc.cs.maple.behavior.oomdp.planning.StateHashTuple;
+import edu.umbc.cs.maple.oomdp.Action;
+import edu.umbc.cs.maple.oomdp.Attribute;
+import edu.umbc.cs.maple.oomdp.Domain;
+import edu.umbc.cs.maple.oomdp.RewardFunction;
+import edu.umbc.cs.maple.oomdp.State;
+
+public class RewardNaiveBFS extends DeterministicPlanner {
+
+	public RewardNaiveBFS(Domain domain, RewardFunction rf, GoalCondition gc, Map <String, List<Attribute>> attributesForHashCode){
+		this.deterministicPlannerInit(domain, rf, gc, attributesForHashCode);
+	}
+	
+	
+	@Override
+	public void planFromState(State initialState) {
+		
+		StateHashTuple sih = this.stateHash(initialState);
+		
+		if(mapToStateIndex.containsKey(sih)){
+			return ; //no need to plan since this is already solved
+		}
+		
+		List <Action> actions = domain.getActions();
+		
+		LinkedList<SearchNode> openQueue = new LinkedList<SearchNode>();
+		Set<SearchNode> closedSet = new HashSet<SearchNode>();
+		
+		openQueue.addLast(new SearchNode(sih));
+		SearchNode lastVistedNodes = null;
+		
+		while(openQueue.size() > 0){
+			
+			SearchNode node = openQueue.poll();
+			
+		}
+
+	}
+
+}

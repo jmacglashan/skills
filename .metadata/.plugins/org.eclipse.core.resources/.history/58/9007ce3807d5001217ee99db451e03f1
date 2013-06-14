@@ -1,0 +1,215 @@
+package edu.brown.cs.ai.experiments.planning.fourrooms;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import edu.brown.cs.ai.behavior.oomdp.learning.EpsilonGreedy;
+import edu.brown.cs.ai.behavior.oomdp.learning.GoalBasedRF;
+import edu.brown.cs.ai.behavior.oomdp.learning.qlearning.QLearning;
+import edu.brown.cs.ai.behavior.oomdp.options.SubgoalOption;
+import edu.brown.cs.ai.behavior.oomdp.planning.StateConditionTest;
+import edu.brown.cs.ai.behavior.oomdp.planning.StateConditionTestIterable;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.DeterministicPlanner;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.MultiStatePrePlanner;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.SDPlannerPolicy;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.SinglePFTF;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.TFGoalCondition;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.UniformCostRF;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.uninformed.bfs.RewardNaiveBFS;
+import edu.brown.cs.ai.domain.oomdp.fourrooms.FourRoomsDomain;
+import edu.brown.cs.ai.experiments.planning.fourrooms.FourRoomsExp.RoomOptionTM;
+import edu.brown.cs.ai.experiments.planning.fourrooms.predefinedoptions.AgentRangeTest;
+import edu.brown.cs.ai.experiments.planning.fourrooms.predefinedoptions.GoalMapper;
+import edu.umbc.cs.maple.behavior.oomdp.Policy;
+import edu.umbc.cs.maple.behavior.oomdp.planning.GreedyQPolicy;
+import edu.umbc.cs.maple.behavior.oomdp.planning.OOMDPPlanner;
+import edu.umbc.cs.maple.genericalgorithms.RandomFactory;
+import edu.umbc.cs.maple.oomdp.Attribute;
+import edu.umbc.cs.maple.oomdp.Domain;
+import edu.umbc.cs.maple.oomdp.RewardFunction;
+import edu.umbc.cs.maple.oomdp.State;
+import edu.umbc.cs.maple.oomdp.StateGenerator;
+import edu.umbc.cs.maple.oomdp.TerminalFunction;
+
+public class FourRoomsQLExp {
+
+	
+	Domain 									d;
+	Map <String, List<Attribute>> 			attributesForHashCode;
+	
+	
+	static List<SubgoalOption> preDefOptions = null;
+	
+	
+
+	public static void main(String[] args) {
+		
+		FourRoomsQLExp exp = new FourRoomsQLExp();
+		exp.runPrimitivesTest(0., 100);
+
+	}
+	
+	
+	public FourRoomsQLExp() {
+		d = (new FourRoomsDomain()).generateDomain();
+		
+		attributesForHashCode = new HashMap<String, List<Attribute>>();
+		
+		List <Attribute> agentAtts = new ArrayList<Attribute>();
+		agentAtts.add(d.getAttribute(FourRoomsDomain.ATTX));
+		agentAtts.add(d.getAttribute(FourRoomsDomain.ATTY));
+		attributesForHashCode.put(FourRoomsDomain.CLASSAGENT, agentAtts);
+		
+		List <Attribute> goalAtts = new ArrayList<Attribute>(agentAtts);
+		attributesForHashCode.put(FourRoomsDomain.CLASSGOAL, goalAtts);
+	}
+
+	public void runPrimitivesTest(double qInit, int numEps){
+		
+		QLearning agent = this.getBasicAgent(qInit);
+		StateGenerator sg = new FRRangeStateGen(1, 5, 7, 11, 11, 2);
+		
+		this.printPerformance(agent, sg, numEps);
+		
+	}
+	
+	public QLearning getBasicAgent(double qInit){
+		
+		TerminalFunction tf = new SinglePFTF(d.getPropFunction(FourRoomsDomain.PFATGOAL));
+		StateConditionTest gc = new TFGoalCondition(tf);
+		RewardFunction rf = new GoalBasedRF(d, gc);
+		EpsilonGreedy p = new EpsilonGreedy(null, .1);
+		
+		
+		double learningRate = 0.2;
+		double gamma = 0.9;
+		int maxSteps = 100000;
+		
+		QLearning agent = new QLearning(d, rf, tf, gamma, attributesForHashCode, qInit, learningRate, p, maxSteps);
+		p.setPlanner(agent);
+		
+		
+		return agent;
+		
+	}
+	
+	
+	public void printPerformance(QLearning agent, StateGenerator sg, int numEps){
+		
+		for(int i = 0; i < numEps; i++){
+			
+			State s = sg.generateState();
+			agent.planFromState(s);
+			System.out.println(agent.getLastNumSteps());
+			
+		}
+		
+	}
+	
+	
+	
+	static class FRRangeStateGen implements StateGenerator{
+
+		int l;
+		int r;
+		int b;
+		int t;
+		int gx;
+		int gy;
+		
+		Random rand;
+		
+		
+		public FRRangeStateGen(int l, int r, int b, int t, int gx, int gy){
+			this.l = l;
+			this.r = r;
+			this.b = b;
+			this.t = t;
+			
+			this.gx = gx;
+			this.gy = gy;
+			
+			this.rand = RandomFactory.getMapped(0);
+		}
+		
+		
+		@Override
+		public State generateState() {
+			
+			State s = FourRoomsDomain.getCleanState();
+			FourRoomsDomain.setGoal(s, gx, gy);
+			
+			int ax = rand.nextInt(r-l+1) + l;
+			int ay = rand.nextInt(t-b+1) + b;
+			
+			FourRoomsDomain.setAgent(s, ax, ay);
+
+			return s;
+		}
+		
+		
+		
+		
+	}
+	
+	
+public void addPreDefinedOptions(OOMDPPlanner planner){
+		
+		
+		if(preDefOptions == null){
+			preDefOptions = new ArrayList<SubgoalOption>(8);
+			
+			preDefOptions.add(this.createRoomOption("blt", 1, 5, 1, 5, 2, 6));
+			preDefOptions.add(this.createRoomOption("blr", 1, 5, 1, 5, 6, 2));
+			
+			preDefOptions.add(this.createRoomOption("tlb", 1, 5, 7, 11, 2, 6));
+			preDefOptions.add(this.createRoomOption("tlr", 1, 5, 7, 11, 6, 9));
+			
+			preDefOptions.add(this.createRoomOption("trl", 7, 11, 6, 11, 6, 9));
+			preDefOptions.add(this.createRoomOption("trb", 7, 11, 6, 11, 9, 5));
+			
+			preDefOptions.add(this.createRoomOption("brr", 7, 11, 1, 4, 9, 5));
+			preDefOptions.add(this.createRoomOption("brl", 7, 11, 1, 4, 6, 2));
+			
+			//add goal option
+			preDefOptions.add(this.createRoomOption("brgoal", 7, 11, 1, 4, 11, 2));
+			
+		}
+		
+		for(SubgoalOption sop : preDefOptions){
+			planner.addNonDomainReferencedAction(sop);
+		}
+		
+		
+	}
+	
+	
+	public SubgoalOption createRoomOption(String name, int l, int r, int b, int t, int sgx, int sgy){
+		
+		StateConditionTestIterable initStates = new AgentRangeTest(l, r, b, t);
+		StateConditionTestIterable goalStates = new AgentRangeTest(sgx, sgx, sgy, sgy);
+		
+		State s = FourRoomsDomain.getCleanState();
+		FourRoomsDomain.setGoal(s, sgx, sgy);
+		initStates.setStateContext(s);
+		
+		RewardFunction rf = new UniformCostRF();
+		
+		OOMDPPlanner planner = new RewardNaiveBFS(d, rf, goalStates, attributesForHashCode);
+		MultiStatePrePlanner.runPlannerForAllInitStates(planner, initStates);
+		
+		Policy p = new SDPlannerPolicy((DeterministicPlanner)planner);
+		
+		SubgoalOption sop = new SubgoalOption(name, p, initStates, goalStates);
+		sop.setStateMapping(new GoalMapper(s));
+		//sop.setTerminateMapper(new RoomOptionTM(sgx, sgy));
+		
+		return sop;
+		
+	}
+	
+
+}

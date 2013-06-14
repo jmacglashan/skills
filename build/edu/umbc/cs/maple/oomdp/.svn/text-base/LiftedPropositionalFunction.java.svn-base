@@ -1,0 +1,186 @@
+package edu.umbc.cs.maple.oomdp;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import edu.umbc.cs.maple.domain.oomdp.rooms.RoomsDomain;
+
+//a LPF can only handle conjoined parameters
+//it will return the logically ANDed results of all possible groundings of the parameter classes in the given state
+public class LiftedPropositionalFunction extends PropositionalFunction {
+	PropositionalFunction 					groundedPropositionalFunction_; //when this LPF is grounded, what PF should be instantiated
+	LiftedPropositionalFunctionParameters 	parameters_;					//the parameters of this LPFP
+	
+	public LiftedPropositionalFunction(String name, Domain domain, LiftedPropositionalFunctionParameters parameters, PropositionalFunction groundedPropositionalFunction) {
+		super(name, domain, parameters.getParameterClasses());
+		
+		this.groundedPropositionalFunction_ = groundedPropositionalFunction;
+		this.parameters_ = parameters;
+	}
+	
+	public boolean isTrue(State st) {
+		//ground the LPFPs in the current state
+		List<LiftedPropositionalFunctionParameters> groundings = parameters_.ground(st);
+		//test the PF on each possible grounding
+		for(LiftedPropositionalFunctionParameters grounding : groundings)
+			if(!groundedPropositionalFunction_.isTrue(st, grounding.toGroundedArray()))
+				return false;	//a LPF is assumed to be true iff it is true for all possible bindings
+								//for a LPRF, the "disjoint" parameters need to be handled differently, as they are a logical or
+		//if none of the possible groundings evaluated to false, then return true
+		//this will lead to a LPF always evaluating to true if there is no possible binding in the given state, but there are going
+		// to be other problems if that is the case anyways
+		return true;
+	}
+
+	@Override
+	//LPF throw away the params parameter because by default it will ground over all possible bindings
+	public boolean isTrue(State st, String[] params) {
+		return isTrue(st);
+	}
+	
+	//a utility class wrapper for a list of LPFPs
+	public static class LiftedPropositionalFunctionParameters {
+		List<LiftedPropositionalFunctionParameter> parameters_;
+		
+		public LiftedPropositionalFunctionParameters(String[] parameterClasses, Domain domain) {
+			parameters_ = new ArrayList<LiftedPropositionalFunctionParameter>();
+			for(String parameterClass : parameterClasses)
+				parameters_.add(new LiftedPropositionalFunctionParameter(parameterClass));
+		}
+		
+		public LiftedPropositionalFunctionParameters(List<LiftedPropositionalFunctionParameter> parameters) {
+			this.parameters_ = parameters;
+		}
+		
+		public String[] getParameterClasses() {
+			String[] parameterClasses = new String[parameters_.size()];
+			for(int parameterIndex = 0; parameterIndex < parameters_.size(); parameterIndex++)
+				parameterClasses[parameterIndex] = parameters_.get(parameterIndex).getParameterClass();
+			return parameterClasses;
+		}
+		
+		//isGrounded() is true iff all parameters are grounded
+		public boolean isGrounded() {
+			for(LiftedPropositionalFunctionParameter parameter : parameters_)
+				if(!parameter.isGrounded())
+					return false;
+			return true;
+		}
+		
+		public List<LiftedPropositionalFunctionParameters> ground(State st) {
+			//if this is already grounded, just return this in a list
+			if(isGrounded())
+				return Collections.singletonList(this);
+			
+			List<LiftedPropositionalFunctionParameters> groundedLPFPs = new ArrayList<LiftedPropositionalFunctionParameters>();
+			
+			//find an ungrounded parameter and ground it
+			for(int parameterIndex = 0; parameterIndex < parameters_.size(); parameterIndex++) {
+				LiftedPropositionalFunctionParameter parameter = parameters_.get(parameterIndex);
+				//if the parameter is already grounded, then just skip it
+				if(parameter.isGrounded())
+					continue;
+				//otherwise ground the parameter and recursively call ground on the resulting lists
+				List<LiftedPropositionalFunctionParameter> groundingParameterBindings = parameter.ground(st);
+				for(LiftedPropositionalFunctionParameter binding : groundingParameterBindings) {
+					//make a new set of parameters to modify
+					List<LiftedPropositionalFunctionParameter> newParametersList = new ArrayList<LiftedPropositionalFunctionParameter>(parameters_);
+					//overwrite the ungrounded parameter with a newly grounded one
+					newParametersList.set(parameterIndex, binding);
+					LiftedPropositionalFunctionParameters newParameters = new LiftedPropositionalFunctionParameters(newParametersList);
+					//recursively continue grounding
+					groundedLPFPs.addAll(newParameters.ground(st));
+				}
+				break;	//this problem is actually solved recursively
+						//the recursion is ugly atm, so this for loop is really just selecting the first ungrounded parameter
+						//this should be handled a bit better
+			}
+			
+			return groundedLPFPs;
+		}
+		
+		//this converts the list of parameters to a string array for use with a regular PropositionalFunction
+		//this is only correctly defined when the Parameters are all grounded
+		public String[] toGroundedArray() {
+			if(!isGrounded())
+				return null;
+			String[] returnval = new String[parameters_.size()];
+			
+			for(int parameterIndex = 0; parameterIndex < parameters_.size(); parameterIndex++)
+				returnval[parameterIndex] = parameters_.get(parameterIndex).parameterInstance_;
+			
+			return returnval;
+		}
+	}
+	
+	public static class LiftedPropositionalFunctionParameter {
+		private String parameterClass_;		//the class of the parameter
+		private String parameterInstance_;	//the actual name of an instance once it has been grounded
+		
+		public LiftedPropositionalFunctionParameter(String parameterClass) {
+			this.parameterClass_ 	= parameterClass;
+			this.parameterInstance_ = null;
+		}
+		
+		public LiftedPropositionalFunctionParameter(String parameterClass, String parameterInstance) {
+			this.parameterClass_ 	= parameterClass;
+			this.parameterInstance_ = parameterInstance;
+		}
+		
+		//this is what you call if the parameter is ungrounded
+		public String getParameterClass() {
+			return parameterClass_;
+		}
+		
+		//this should be the call made to get the grounded parameter
+		public String getParameterInstance() {
+			return parameterInstance_;
+		}
+		
+		//if the parameter has been grounded, then parameterInstance_ will not be null
+		public boolean isGrounded() {
+			return parameterInstance_ != null;
+		}
+		
+		public List<LiftedPropositionalFunctionParameter> ground(State st) {
+			//if already grounded, just return a list with this parameter
+			if(isGrounded())
+				return Collections.singletonList(this);
+			
+			List<LiftedPropositionalFunctionParameter> groundedLPFPs = new ArrayList<LiftedPropositionalFunctionParameter>();
+			
+			//get the list of possible object instances for this parameter
+			List<ObjectInstance> instances = st.getObjectsOfClass(parameterClass_);
+			for(ObjectInstance instance : instances)
+				groundedLPFPs.add(new LiftedPropositionalFunctionParameter(parameterClass_, instance.getName()));
+			
+			return groundedLPFPs;
+		}
+	}
+	
+	public static void main(String[] args) {
+		RoomsDomain constructor = new RoomsDomain();
+		Domain domain = constructor.generateDomain();
+		String[] parameters = new String[2];
+		parameters[0] = domain.getObjectClasses().get(0).name_;
+		parameters[1] = domain.getObjectClasses().get(1).name_;
+		LiftedPropositionalFunctionParameters testParams = new LiftedPropositionalFunctionParameters(parameters, domain);
+		State teststate = constructor.getCleanState();
+		RoomsDomain.move(teststate, 1, 1);
+		teststate.addObject(new ObjectInstance(domain.getObjectClass(parameters[0]), "agent2"));
+		teststate.addObject(new ObjectInstance(domain.getObjectClass(parameters[1]), "goal2"));
+		List<LiftedPropositionalFunctionParameters> result = testParams.ground(teststate);
+//		for(LiftedPropositionalFunctionParameters grounded : result) {
+//			System.out.println(grounded.parameters_.size());
+//			for(LiftedPropositionalFunctionParameter param : grounded.parameters_)
+//				System.out.println(param.getParameterInstance());
+//			System.out.println();
+//		}
+		PropositionalFunction pf = domain.getPropFunctions().get(0);
+		LiftedPropositionalFunction lpf = new LiftedPropositionalFunction("liftedingoal", domain, testParams, pf);
+		System.out.println(lpf.isTrue(teststate));
+		System.out.println(pf.isTrue(teststate, "agent0,goal2"));
+		System.out.println(pf.isTrue(teststate, "agent2,goal0"));
+	}
+}

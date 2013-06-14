@@ -1,0 +1,29 @@
+package edu.brown.cs.ai.behavior.oomdp.learning;
+
+import edu.brown.cs.ai.behavior.oomdp.planning.StateConditionTest;
+import edu.umbc.cs.maple.oomdp.Domain;
+import edu.umbc.cs.maple.oomdp.GroundedAction;
+import edu.umbc.cs.maple.oomdp.RewardFunction;
+import edu.umbc.cs.maple.oomdp.State;
+
+public class GoalBasedRF extends RewardFunction {
+
+	protected StateConditionTest gc;
+	
+	
+	public GoalBasedRF() {
+		// TODO Auto-generated constructor stub
+	}
+
+	public GoalBasedRF(Domain domain) {
+		super(domain);
+		// TODO Auto-generated constructor stub
+	}
+
+	@Override
+	public double reward(State s, GroundedAction a, State sprime) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+}

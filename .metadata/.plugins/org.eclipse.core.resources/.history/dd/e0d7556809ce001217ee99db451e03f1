@@ -1,0 +1,11 @@
+package edu.brown.cs.ai.behavior.oomdp.optiondiscovery.macros;
+
+import edu.umbc.cs.maple.oomdp.GroundedAction;
+
+public class AllSequenceExtraction {
+
+	
+	
+	protected void getActionIdentifiers(List <GroundedAction> actions)
+	
+}

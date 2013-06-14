@@ -1,0 +1,101 @@
+package edu.umbc.cs.maple.behavior.oomdp;
+
+import java.util.List;
+
+import edu.umbc.cs.maple.oomdp.GroundedAction;
+import edu.umbc.cs.maple.oomdp.RewardFunction;
+import edu.umbc.cs.maple.oomdp.State;
+import edu.umbc.cs.maple.oomdp.TerminalFunction;
+
+public abstract class Policy {
+
+	public abstract GroundedAction getAction(State s);
+	public abstract List<ActionProb> getActionDistributionForState(State s);
+	
+	public EpisodeAnalysis evaluateBehavior(State s, RewardFunction rf, TerminalFunction tf){
+		EpisodeAnalysis res = new EpisodeAnalysis();
+		res.addState(s); //add initial state
+		
+		State cur = s;
+		while(!tf.isTerminal(cur)){
+			
+			//follow policy
+			GroundedAction ga = this.getAction(cur);
+			State next = ga.executeIn(cur);
+			double r = rf.reward(cur, ga.action.getName(), ga.params, next);
+			
+			//record result
+			res.record(next, ga, r);
+			
+			//continue onward
+			cur = next;
+			
+		}
+		
+		return res;
+	}
+	public EpisodeAnalysis evaluateBehavior(State s, RewardFunction rf, TerminalFunction tf, int maxSteps){
+		EpisodeAnalysis res = new EpisodeAnalysis();
+		res.addState(s); //add initial state
+		
+		State cur = s;
+		int nSteps = 0;
+		while(!tf.isTerminal(cur) && nSteps < maxSteps){
+			
+			//follow policy
+			GroundedAction ga = this.getAction(cur);
+			State next = ga.executeIn(cur);
+			double r = rf.reward(cur, ga.action.getName(), ga.params, next);
+			
+			//record result
+			res.record(next, ga, r);
+			
+			//continue onward
+			cur = next;
+			
+			nSteps++;
+			
+		}
+		
+		return res;
+	}
+	public EpisodeAnalysis evaluateBehavior(State s, RewardFunction rf, int numSteps){
+		EpisodeAnalysis res = new EpisodeAnalysis();
+		res.addState(s);
+		
+		State cur = s;
+		int nSteps = 0;
+		while(nSteps < numSteps){
+			
+			//follow policy
+			GroundedAction ga = this.getAction(cur);
+			State next = ga.executeIn(cur);
+			double r = rf.reward(cur, ga.action.getName(), ga.params, next);
+			
+			//record result
+			res.record(next, ga, r);
+			
+			//continue onward
+			cur = next;
+			
+			nSteps++;
+			
+		}
+		
+		return res;
+	}
+	
+	
+	
+	public class ActionProb{
+		public GroundedAction ga;
+		public double pSelection;
+		
+		public ActionProb(GroundedAction ga, double p){
+			this.ga = ga;
+			this.pSelection = p;
+		}
+		
+	}
+	
+}

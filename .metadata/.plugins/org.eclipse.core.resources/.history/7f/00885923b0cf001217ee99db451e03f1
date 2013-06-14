@@ -1,0 +1,83 @@
+package edu.brown.cs.ai.experiments.planning.fourrooms;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import edu.brown.cs.ai.behavior.oomdp.optiondiscovery.macros.macrotraining.MacroTrainingAgent;
+import edu.brown.cs.ai.behavior.oomdp.options.OptionEvaluatingRF;
+import edu.brown.cs.ai.behavior.oomdp.planning.StateConditionTest;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.SinglePFTF;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.TFGoalCondition;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.UniformCostRF;
+import edu.brown.cs.ai.domain.oomdp.fourrooms.FourRoomsDomain;
+import edu.umbc.cs.maple.behavior.oomdp.Policy;
+import edu.umbc.cs.maple.oomdp.Attribute;
+import edu.umbc.cs.maple.oomdp.Domain;
+import edu.umbc.cs.maple.oomdp.RewardFunction;
+import edu.umbc.cs.maple.oomdp.State;
+import edu.umbc.cs.maple.oomdp.TerminalFunction;
+
+public class FourRoomsMacroTrainingExp {
+
+	protected MacroTrainingAgent						mta;
+	protected TerminalFunction 							tf;
+	protected RewardFunction							rf;
+	protected StateConditionTest						gc;
+	
+	
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		
+		FourRoomsMacroTrainingExp exp = new FourRoomsMacroTrainingExp();
+		
+		exp.plan("T0,0", 1, 11, 6, 9);
+
+	}
+	
+	
+	public FourRoomsMacroTrainingExp(){
+		
+		Domain d = (new FourRoomsDomain()).generateDomain();
+		
+		Map<String, List<Attribute>> attributesForHashCode = new HashMap<String, List<Attribute>>();
+		
+		List <Attribute> agentAtts = new ArrayList<Attribute>();
+		agentAtts.add(d.getAttribute(FourRoomsDomain.ATTX));
+		agentAtts.add(d.getAttribute(FourRoomsDomain.ATTY));
+		attributesForHashCode.put(FourRoomsDomain.CLASSAGENT, agentAtts);
+		
+		List <Attribute> goalAtts = new ArrayList<Attribute>(agentAtts);
+		attributesForHashCode.put(FourRoomsDomain.CLASSGOAL, goalAtts);
+		
+		tf = new SinglePFTF(d.getPropFunction(FourRoomsDomain.PFATGOAL));
+		gc = new TFGoalCondition(tf);
+		rf = new OptionEvaluatingRF(new UniformCostRF());
+		
+		mta = new MacroTrainingAgent(d, attributesForHashCode, 10);
+		
+	}
+	
+	
+	public void plan(String taskName, int ax, int ay, int gx, int gy){
+		
+		State s = FourRoomsDomain.getCleanState();
+		FourRoomsDomain.setAgent(s, ax, ay);
+		FourRoomsDomain.setGoal(s, gx, gy);
+		
+		mta.defineAndSetTask(taskName, tf, gc);
+		mta.planFromState(s);
+		
+		Policy p = mta.getPolicyForCurrentTask();
+		p.evaluateMethodsShouldDecomposeOption(false);
+		System.out.println("Plan: " + p.evaluateBehavior(s, rf, tf).getActionSequenceString());
+		System.out.println("===");
+		
+	}
+	
+	
+
+}

@@ -1,0 +1,99 @@
+package edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.rollouts;
+
+import java.util.List;
+import java.util.Map;
+
+import edu.brown.cs.ai.behavior.oomdp.planning.StateConditionTest;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.PrioritizedSearchNode;
+import edu.brown.cs.ai.datastructures.StochasticTree;
+import edu.umbc.cs.maple.behavior.oomdp.planning.StateHashTuple;
+import edu.umbc.cs.maple.oomdp.Attribute;
+import edu.umbc.cs.maple.oomdp.Domain;
+import edu.umbc.cs.maple.oomdp.GroundedAction;
+import edu.umbc.cs.maple.oomdp.RewardFunction;
+
+public class ABRSample extends ActionBiasedRollout {
+
+	protected StochasticTree<PrioritizedSearchNode>				openList;
+	
+	
+	public ABRSample(Domain domain, RewardFunction rf, StateConditionTest gc, Map <String, List<Attribute>> attributesForHashCode, ActionBias abias){
+		this.deterministicPlannerInit(domain, rf, gc, attributesForHashCode);
+		this.abrInit(abias);
+		
+	}
+	
+	
+	@Override
+	protected PrioritizedSearchNode selectNodeFromOpen() {
+		PrioritizedSearchNode res = openList.poll();
+		//System.out.println("polling weight: " + res.priority);
+		return res;
+	}
+
+	@Override
+	protected void offerToOpen(PrioritizedSearchNode psn) {
+		//System.out.println("offering weight: " + psn.priority);
+		openList.insert(psn.priority, psn);
+	}
+
+	@Override
+	protected int openSize() {
+		return openList.size();
+	}
+
+	@Override
+	protected PrioritizedSearchNode getOpenEntry(PrioritizedSearchNode psn) {
+		return openList.getStoredEntry(psn);
+	}
+
+	@Override
+	protected void removeFromOpen(PrioritizedSearchNode psn) {
+		//System.out.println("removing weight: " + psn.priority);
+		openList.remove(psn);
+	}
+
+
+	
+	@Override
+	protected void setWeights(List<PrioritizedSearchNode> successors) {
+		double [] weights = new double[successors.size()];
+		double sumWeight = 0.;
+		for(int i = 0; i < successors.size(); i++){
+			double w = actionBias.bias(successors.get(i).generatingAction);
+			weights[i] = w;
+			sumWeight += w;
+		}
+		for(int i = 0; i < successors.size(); i++){
+			PrioritizedSearchNode psn = successors.get(i);
+			psn.priority = ((PrioritizedSearchNode)psn.backPointer).priority * (weights[i] / sumWeight);
+		}
+		
+	}
+	
+	public void prePlanPrep(){
+		openList = new StochasticTree<PrioritizedSearchNode>();
+	}
+
+	@Override
+	protected boolean pathABetterThanB(PrioritizedSearchNode a, PrioritizedSearchNode b) {
+		return false; //sacrifices optimality
+	}
+
+	@Override
+	protected int selectRolloutSuccessor(List<PrioritizedSearchNode> successors) {
+		if(successors.size() == 0){
+			return -1;
+		}
+		
+		StochasticTree<Integer> st = new StochasticTree<Integer>();
+		for(int i = 0; i < successors.size(); i++){
+			st.insert(successors.get(i).priority, i);
+		}
+		return st.sample();
+	}
+
+
+	
+
+}

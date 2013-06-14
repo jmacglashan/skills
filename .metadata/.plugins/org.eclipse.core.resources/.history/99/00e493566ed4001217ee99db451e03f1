@@ -1,0 +1,66 @@
+package edu.brown.cs.ai.experiments.planning.fourrooms;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import edu.brown.cs.ai.domain.oomdp.fourrooms.FourRoomsDomain;
+import edu.umbc.cs.maple.oomdp.Attribute;
+import edu.umbc.cs.maple.oomdp.Domain;
+import edu.umbc.cs.maple.oomdp.State;
+import edu.umbc.cs.maple.oomdp.StateGenerator;
+
+public class FourRoomsQLExp {
+
+	
+	Domain 									d;
+	Map <String, List<Attribute>> 			attributesForHashCode;
+	
+	
+	
+
+	public static void main(String[] args) {
+		
+		FourRoomsQLExp exp = new FourRoomsQLExp();
+
+	}
+	
+	
+	public FourRoomsQLExp() {
+		d = (new FourRoomsDomain()).generateDomain();
+		
+		attributesForHashCode = new HashMap<String, List<Attribute>>();
+		
+		List <Attribute> agentAtts = new ArrayList<Attribute>();
+		agentAtts.add(d.getAttribute(FourRoomsDomain.ATTX));
+		agentAtts.add(d.getAttribute(FourRoomsDomain.ATTY));
+		attributesForHashCode.put(FourRoomsDomain.CLASSAGENT, agentAtts);
+		
+		List <Attribute> goalAtts = new ArrayList<Attribute>(agentAtts);
+		attributesForHashCode.put(FourRoomsDomain.CLASSGOAL, goalAtts);
+	}
+
+	
+	
+	
+	
+	
+	static class FRRangeStateGen implements StateGenerator{
+
+		
+		
+		
+		@Override
+		public State generateState() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+		
+		
+		
+		
+	}
+	
+
+}

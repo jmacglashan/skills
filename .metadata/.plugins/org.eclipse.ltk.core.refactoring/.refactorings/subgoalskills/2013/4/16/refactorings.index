@@ -1,0 +1,7 @@
+1366393466793	Rename type 'BoltzmannVFPolicy'
+1366393496242	Rename field 'vfplanner'
+1366393538281	Rename type 'GreedyVFPolicy'
+1366393574844	Rename field 'vfplanner'
+1366400359628	Rename field 'sumReward'
+1366405592277	Rename field 'statesToDepthStates'
+1366405604717	Rename field 'statesToStateNoes'

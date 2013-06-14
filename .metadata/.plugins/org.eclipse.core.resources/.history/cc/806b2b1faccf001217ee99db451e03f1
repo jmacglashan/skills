@@ -1,0 +1,86 @@
+package edu.brown.cs.ai.behavior.oomdp.optiondiscovery.macros.macrotraining;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import edu.brown.cs.ai.behavior.oomdp.planning.StateConditionTest;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.SDPlannerPolicy;
+import edu.umbc.cs.maple.behavior.oomdp.Policy;
+import edu.umbc.cs.maple.behavior.oomdp.planning.OOMDPPlanner;
+import edu.umbc.cs.maple.oomdp.Action;
+import edu.umbc.cs.maple.oomdp.Attribute;
+import edu.umbc.cs.maple.oomdp.Domain;
+import edu.umbc.cs.maple.oomdp.State;
+
+public class MacroTrainingAgent extends OOMDPPlanner {
+
+	protected Map<String, MacroTrainingPlanner>			tasks;
+	protected List<List<Action>>						macroLevels;
+	protected int										maxDepth;
+	protected MacroTrainingPlanner						curTaskPlanner;
+	
+	
+	public MacroTrainingAgent(Domain d, Map <String, List<Attribute>> attributesForHashCode, int maxDepth){
+		this.MTAInit(d, attributesForHashCode, maxDepth);
+	}
+	
+	
+	protected void MTAInit(Domain d, Map <String, List<Attribute>> attributesForHashCode, int maxDepth){
+		
+		this.PlannerInit(d, null, null, 1., attributesForHashCode);
+		this.maxDepth = maxDepth;
+		this.tasks = new HashMap<String, MacroTrainingPlanner>();
+		this.macroLevels = new ArrayList<List<Action>>();
+		this.macroLevels.add(new ArrayList<Action>(0));
+		
+		curTaskPlanner = null;
+		
+	}
+	
+	
+	public void defineTask(String taskName, StateConditionTest goalCondition){
+		MacroTrainingPlanner mtp = new MacroTrainingPlanner(domain, goalCondition, attributesForHashCode, maxDepth, actions, macroLevels);
+		tasks.put(taskName, mtp);
+	}
+	
+	public void setTask(String taskName){
+		curTaskPlanner = tasks.get(taskName);
+	}
+	
+	public void defineAndSetTask(String taskName, StateConditionTest goalCondition){
+		this.defineTask(taskName, goalCondition);
+		this.setTask(taskName);
+	}
+	
+	
+	public Policy getPolicyForCurrentTask(){
+		return new SDPlannerPolicy(curTaskPlanner);
+	}
+	
+	public Policy getPolicyForTask(String taskName){
+		return new SDPlannerPolicy(tasks.get(taskName));
+	}
+	
+	
+	@Override
+	public void planFromState(State initialState) {
+		
+		curTaskPlanner.macroLevels = macroLevels;
+		curTaskPlanner.maxDepth = maxDepth;
+		
+		curTaskPlanner.planFromState(initialState);
+		
+		if(curTaskPlanner.lastPlanWasNovel && curTaskPlanner.foundPlan){
+			
+			//then make a macro from it
+			int levelForMacro = curTaskPlanner.levelDepth;
+			Policy p = this.getPolicyForCurrentTask();
+			
+			
+		}
+
+	}
+
+}

@@ -1,0 +1,71 @@
+package edu.umbc.cs.maple.behavior.oomdp.planning;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+import edu.umbc.cs.maple.behavior.oomdp.Policy;
+import edu.umbc.cs.maple.behavior.oomdp.QValue;
+import edu.umbc.cs.maple.oomdp.GroundedAction;
+import edu.umbc.cs.maple.oomdp.State;
+
+public class BoltzmannVFPolicy extends Policy {
+
+	protected ValueFunctionPlanner		vfplanner;
+	double								temperature;
+	Random 								rand;
+	
+	public BoltzmannVFPolicy(ValueFunctionPlanner vf, double temperature){
+		this.vfplanner = vf;
+		this.temperature = temperature;
+		this.rand = new Random();
+	}
+	
+	@Override
+	public GroundedAction getAction(State s) {
+		List<QValue> qValues = this.vfplanner.getQs(s);
+		List <ActionProb> dist = this.getActionDistributionForQValues(qValues);
+		double tp = 0.;
+		double roll = this.rand.nextDouble();
+		for(ActionProb ap : dist){
+			tp += ap.pSelection;
+			if(roll < tp){
+				return ap.ga;
+			}
+		}
+		
+		//something went wrong, should have added to one forcing a return so return null to break things
+		return null;
+	}
+
+	@Override
+	public List<ActionProb> getActionDistributionForState(State s) {
+		List<QValue> qValues = this.vfplanner.getQs(s);
+		return this.getActionDistributionForQValues(qValues);
+	}
+
+	
+	
+	private List<ActionProb> getActionDistributionForQValues(List <QValue> qValues){
+		
+		List <ActionProb> res = new ArrayList<Policy.ActionProb>();
+		
+		double [] aps = new double[qValues.size()];
+		double sumAP = 0.;
+		for(int i = 0; i < qValues.size(); i++){
+			double v = Math.exp(qValues.get(i).q / this.temperature);
+			aps[i] = v;
+			sumAP += v;
+		}
+		
+		for(int i = 0; i < qValues.size(); i++){
+			QValue q = qValues.get(i);
+			double p = aps[i]/sumAP;
+			ActionProb ap = new ActionProb(q.a, p);
+			res.add(ap);
+		}
+		
+		return res;
+	}
+
+}

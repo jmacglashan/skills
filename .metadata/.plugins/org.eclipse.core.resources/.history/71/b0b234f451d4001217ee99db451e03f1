@@ -1,0 +1,26 @@
+package edu.brown.cs.ai.behavior.oomdp.learning.qlearning;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import edu.umbc.cs.maple.behavior.oomdp.QValue;
+import edu.umbc.cs.maple.behavior.oomdp.planning.StateHashTuple;
+import edu.umbc.cs.maple.oomdp.GroundedAction;
+
+public class QLearningStateNode {
+
+	public StateHashTuple			s;
+	public List<QValue>				qEntry;
+	
+	
+	public QLearningStateNode(StateHashTuple s) {
+		this.s = s;
+		qEntry = new ArrayList<QValue>();
+	}
+
+	public void addQValue(GroundedAction a, double q){
+		
+	}
+	
+	
+}

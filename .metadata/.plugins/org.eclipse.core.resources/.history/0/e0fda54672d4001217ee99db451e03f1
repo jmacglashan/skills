@@ -1,0 +1,47 @@
+package edu.brown.cs.ai.behavior.oomdp.learning;
+
+import java.util.List;
+import java.util.Random;
+
+import edu.umbc.cs.maple.behavior.oomdp.Policy;
+import edu.umbc.cs.maple.behavior.oomdp.planning.QComputablePlanner;
+import edu.umbc.cs.maple.genericalgorithms.RandomFactory;
+import edu.umbc.cs.maple.oomdp.GroundedAction;
+import edu.umbc.cs.maple.oomdp.State;
+
+public class EpsilonGreedy extends Policy {
+
+	protected QComputablePlanner		qplanner;
+	protected double					epsilon;
+	Random 								rand;
+	
+	
+	public EpsilonGreedy(QComputablePlanner planner, double epsilon) {
+		qplanner = planner;
+		this.epsilon = epsilon;
+		rand = RandomFactory.getMapped(0);
+	}
+
+	public void setPlanner(QComputablePlanner qplanner){
+		this.qplanner = qplanner;
+	}
+	
+	@Override
+	public GroundedAction getAction(State s) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<ActionProb> getActionDistributionForState(State s) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean isStochastic() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+}

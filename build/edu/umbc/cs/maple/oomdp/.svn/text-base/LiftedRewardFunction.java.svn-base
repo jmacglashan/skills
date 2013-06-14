@@ -1,0 +1,39 @@
+package edu.umbc.cs.maple.oomdp;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+public abstract class LiftedRewardFunction {
+	
+	protected Domain		domain_; 		//the domain on which this LRF operates
+	protected Parameter[]	parameters_;	//the parameters which this LRF operates on
+
+	public LiftedRewardFunction(Domain domain) {
+		domain_ = domain;
+	}
+	
+	public Set<RewardFunction> ground(State s, String a, State sprime) {
+		return null;
+	}
+
+	public double reward(State s, String a, State sprime) {
+		return 0;
+	}
+	
+	protected abstract double reward(State s, String a, State sprime, Map<String, String> groundedParameters);
+
+	//a parameter to a LRF
+	public abstract class Parameter {
+		protected LiftedRewardFunction 	parent_;		//back reference
+		protected ObjectClass 			objectClass_;	//the ObjectClass which this parameter can take
+	}
+	
+	//a parameter where the different values for the parameter
+	public class ConjoinedParameter extends Parameter {
+	}
+	
+	public class DisjointParameter extends Parameter {
+		
+	}
+}

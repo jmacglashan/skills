@@ -1,0 +1,24 @@
+package edu.brown.cs.ai.behavior.oomdp.optiondiscovery.macros.macrotraining;
+
+import java.util.List;
+import java.util.Random;
+
+import edu.brown.cs.ai.behavior.oomdp.options.MacroAction;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.DeterministicPlanner;
+import edu.umbc.cs.maple.oomdp.Action;
+import edu.umbc.cs.maple.oomdp.State;
+
+public class MacroTrainingPlanner extends DeterministicPlanner {
+
+	protected List <Action>								baseActions;
+	protected List<List<MacroAction>>					macroLevels;
+	protected boolean									optionsFirst;
+	protected Random									rand;
+	
+	@Override
+	public void planFromState(State initialState) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

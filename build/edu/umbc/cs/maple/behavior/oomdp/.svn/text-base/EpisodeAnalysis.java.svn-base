@@ -1,0 +1,55 @@
+package edu.umbc.cs.maple.behavior.oomdp;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import edu.umbc.cs.maple.oomdp.GroundedAction;
+import edu.umbc.cs.maple.oomdp.State;
+
+public class EpisodeAnalysis {
+
+	public List<State>									stateSequence;
+	public List<GroundedAction>							actionSequence;
+	public List<Double>									rewardSequence;
+	
+	public EpisodeAnalysis(){
+		stateSequence = new ArrayList<State>();
+		actionSequence = new ArrayList<GroundedAction>();
+		rewardSequence = new ArrayList<Double>();
+	}
+	
+	public void addState(State s){
+		stateSequence.add(s);
+	}
+	
+	public void addAction(GroundedAction ga){
+		actionSequence.add(ga);
+	}
+	
+	public void addReward(double r){
+		rewardSequence.add(r);
+	}
+	
+	public void record(State next, GroundedAction a, double r){
+		stateSequence.add(next);
+		actionSequence.add(a);
+		rewardSequence.add(r);
+	}
+	
+	public State getState(int i){
+		return stateSequence.get(i);
+	}
+	
+	public GroundedAction getAction(int i){
+		return actionSequence.get(i);
+	}
+	
+	public double getReward(int i){
+		return rewardSequence.get(i);
+	}
+	
+	public int numTimeSteps(){
+		return stateSequence.size(); //state sequence will always have the most because of initial state and terminal state
+	}
+	
+}

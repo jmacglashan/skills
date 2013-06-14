@@ -1,0 +1,27 @@
+package edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.rollouts;
+
+import java.util.List;
+
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.informed.PrioritizedSearchNode;
+
+public class ABRWeightedStates extends ABRSample {
+
+	
+	
+	@Override
+	protected void setWeights(List<PrioritizedSearchNode> successors) {
+		double [] weights = new double[successors.size()];
+		double sumWeight = 0.;
+		for(int i = 0; i < successors.size(); i++){
+			double w = actionBias.bias(successors.get(i).generatingAction);
+			weights[i] = w;
+			sumWeight += w;
+		}
+		for(int i = 0; i < successors.size(); i++){
+			PrioritizedSearchNode psn = successors.get(i);
+			psn.priority = ((PrioritizedSearchNode)psn.backPointer).priority * (weights[i] / sumWeight);
+		}
+		
+	}
+	
+}

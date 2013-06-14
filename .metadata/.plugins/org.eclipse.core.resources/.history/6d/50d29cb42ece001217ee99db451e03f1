@@ -1,0 +1,13 @@
+package edu.brown.cs.ai.experiments.planning.fourrooms;
+
+public class FourRoomsMacrosExp {
+
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

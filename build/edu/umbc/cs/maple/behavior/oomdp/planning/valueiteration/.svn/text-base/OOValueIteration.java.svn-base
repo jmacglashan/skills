@@ -1,0 +1,321 @@
+package edu.umbc.cs.maple.behavior.oomdp.planning.valueiteration;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import edu.umbc.cs.maple.behavior.oomdp.QValue;
+import edu.umbc.cs.maple.behavior.oomdp.planning.ActionTransitions;
+import edu.umbc.cs.maple.behavior.oomdp.planning.HashedTransitionProbability;
+import edu.umbc.cs.maple.behavior.oomdp.planning.StateHashTuple;
+import edu.umbc.cs.maple.behavior.oomdp.planning.ValueFunctionPlanner;
+import edu.umbc.cs.maple.debugtools.DPrint;
+import edu.umbc.cs.maple.oomdp.Action;
+import edu.umbc.cs.maple.oomdp.Attribute;
+import edu.umbc.cs.maple.oomdp.Domain;
+import edu.umbc.cs.maple.oomdp.GroundedAction;
+import edu.umbc.cs.maple.oomdp.RewardFunction;
+import edu.umbc.cs.maple.oomdp.State;
+import edu.umbc.cs.maple.oomdp.TerminalFunction;
+
+public class OOValueIteration implements ValueFunctionPlanner{
+
+	protected Domain												domain;
+	protected Map <String, List<Attribute>>							attributesForHashCode;
+	protected RewardFunction										rf;
+	protected TerminalFunction										tf;
+	protected double												gamma;
+	
+	protected Map <StateHashTuple, List<ActionTransitions>>			transitionDynamics;
+	protected Map <StateHashTuple, StateHashTuple>					mapToStateIndex; //this is useful because two states may be equal but have different object name references and this mapping lets the user pull out which exact state (and object names) was used for the action dynamics
+	protected Map <StateHashTuple, Double>							valueFunction;
+	
+	protected double												minDelta;
+	protected int													maxPasses;
+	
+	protected boolean												containsParameterizedActions;
+	
+	
+	
+	public OOValueIteration(Domain domain, RewardFunction rf, TerminalFunction tf, double gamma, Map <String, List<Attribute>> attributesForHashCode, double minDelta, int maxPasses){
+		this.domain = domain;
+		this.rf = rf;
+		this.tf = tf;
+		this.gamma = gamma;
+		this.attributesForHashCode = attributesForHashCode;
+		this.minDelta = minDelta;
+		this.maxPasses = maxPasses;
+		
+		this.transitionDynamics = new HashMap<StateHashTuple, List<ActionTransitions>>();
+		mapToStateIndex = new HashMap<StateHashTuple, StateHashTuple>();
+		this.valueFunction = new HashMap<StateHashTuple, Double>();
+		
+		containsParameterizedActions = false;
+		List <Action> actions = domain.getActions();
+		for(Action a : actions){
+			if(a.getParameterClasses().length > 0){
+				containsParameterizedActions = true;
+				break;
+			}
+		}
+		
+	}
+	
+	
+	public void setAttributesForHashCode(Map<String, List<Attribute>> attributesForHashCode){
+		this.attributesForHashCode = attributesForHashCode;
+	}
+	
+	public void setAttributesForClass(String classname, List <Attribute> atts){
+		if(attributesForHashCode == null){
+			attributesForHashCode = new HashMap<String, List<Attribute>>();
+		}
+		attributesForHashCode.put(classname, atts);
+	}
+	
+	public void addAttributeForClass(String classname, Attribute att){
+		if(attributesForHashCode == null){
+			attributesForHashCode = new HashMap<String, List<Attribute>>();
+		}
+		List <Attribute> atts = attributesForHashCode.get(classname);
+		if(atts == null){
+			atts = new ArrayList<Attribute>();
+			attributesForHashCode.put(classname, atts);
+		}
+		//check if already there or not
+		for(Attribute attInList : atts){
+			if(attInList.name_.equals(att.name_)){
+				return ;
+			}
+		}
+		//if reached here then this att is not already added
+		atts.add(att);
+	}
+	
+	
+	@Override
+	public void planFromState(State initialState){
+		this.performReachabilityFrom(initialState);
+		this.runVI();
+	}
+	
+	
+	public void runVI(){
+		
+		Set <StateHashTuple> states = transitionDynamics.keySet();
+		
+		int i = 0;
+		for(i = 0; i < this.maxPasses; i++){
+			
+			double delta = 0.;
+			for(StateHashTuple sh : states){
+				
+				if(tf.isTerminal(sh.s)){
+					//no need to process this state; always zero because it is terminal and agent cannot behave here
+				}
+				
+				Double V = valueFunction.get(sh);
+				double v = 0.;
+				if(V != null){
+					v = V;
+				}
+				
+				List<ActionTransitions> transitions = transitionDynamics.get(sh);
+				double maxQ = Double.NEGATIVE_INFINITY;
+				for(ActionTransitions at : transitions){
+					double q = this.computeQ(sh.s, at);
+					if(q > maxQ){
+						maxQ = q;
+					}
+				}
+				
+				//set V to maxQ
+				valueFunction.put(sh, maxQ);
+				delta = Math.max(Math.abs(maxQ - v), delta);
+				
+			}
+			
+			if(delta < this.minDelta){
+				break; //approximated well enough; stop iterating
+			}
+			
+		}
+		
+		DPrint.cl(10, "Passes: " + i);
+		
+	}
+	
+	
+	public boolean performReachabilityFrom(State si){
+		
+		DPrint.cl(11, "Starting reachability analysis");
+		
+		StateHashTuple sih = this.stateHash(si);
+		//first check if this is an new state, otherwise we do not need to do any new reachability analysis
+		if(transitionDynamics.containsKey(sih)){
+			return false; //no need for additional reachability testing
+		}
+		
+		//add to the open list
+		LinkedList <StateHashTuple> openList = new LinkedList<StateHashTuple>();
+		Set <StateHashTuple> openedSet = new HashSet<StateHashTuple>();
+		openList.offer(sih);
+		openedSet.add(sih);
+		
+		List <Action> actions = domain.getActions();
+		
+		
+		while(openList.size() > 0){
+			StateHashTuple sh = openList.poll();
+			
+			//skip this if it's already been expanded
+			if(transitionDynamics.containsKey(sh)){
+				continue;
+			}
+			
+			//otherwise do expansion
+			//first get all grounded actions for this state
+			List <GroundedAction> gas = new ArrayList<GroundedAction>();
+			for(Action a : actions){
+				gas.addAll(sh.s.getAllGroundedActionsFor(a));
+			}
+			
+			//then get the transition dynamics for each action and queue up new states
+			List <ActionTransitions> transitions = new ArrayList<ActionTransitions>();
+			for(GroundedAction ga : gas){
+				ActionTransitions at = new ActionTransitions(sh.s, ga, attributesForHashCode);
+				transitions.add(at);
+				for(HashedTransitionProbability tp : at.transitions){
+					StateHashTuple tsh = tp.sh;
+					if(!openedSet.contains(tsh) && !transitionDynamics.containsKey(tsh)){
+						openedSet.add(tsh);
+						openList.offer(tsh);
+					}
+				}
+			}
+			
+			//now make entry for this in the transition dynamics
+			transitionDynamics.put(sh, transitions);
+			mapToStateIndex.put(sh, sh);
+			
+		}
+		
+		DPrint.cl(11, "Finished reachability analysis; # states: " + transitionDynamics.size());
+		
+		
+		return true;
+		
+	}
+	
+	
+	@Override
+	public List <QValue> getQs(State s){
+		
+		StateHashTuple sh = this.stateHash(s);
+		Map<String,String> matching = null;
+		StateHashTuple indexSH = mapToStateIndex.get(sh);
+		if(this.containsParameterizedActions){
+			matching = s.getExactStateObjectMatchingTo(indexSH.s);
+		}
+		
+		List <Action> actions = domain.getActions();
+		
+		List <QValue> res = new ArrayList<QValue>();
+		for(Action a : actions){
+			List <GroundedAction> applications = s.getAllGroundedActionsFor(a);
+			for(GroundedAction ga : applications){
+				res.add(this.getQ(sh, ga, matching));
+			}
+		}
+		
+		return res;
+	}
+	
+	@Override
+	public QValue getQ(State s, GroundedAction a){
+		StateHashTuple sh = this.stateHash(s);
+		Map<String,String> matching = null;
+		StateHashTuple indexSH = mapToStateIndex.get(sh);
+		if(this.containsParameterizedActions){
+			matching = s.getExactStateObjectMatchingTo(indexSH.s);
+		}
+		return this.getQ(sh, a, matching);
+	}
+	
+	
+	private QValue getQ(StateHashTuple sh, GroundedAction a, Map <String, String> matching){
+		
+		//translate grounded action if necessary
+		GroundedAction ta = a;
+		if(matching != null){
+			ta = this.translateAction(ta, matching);
+		}
+		
+		//find ActionTransition for the designated GA
+		List <ActionTransitions> allTransitions = transitionDynamics.get(sh);
+		ActionTransitions matchingAt = null;
+		for(ActionTransitions at : allTransitions){
+			if(at.matchingTransitions(ta)){
+				matchingAt = at;
+				break;
+			}
+		}
+		
+		double q = this.computeQ(sh.s, matchingAt);
+		
+		return new QValue(sh.s, a, q);
+	}
+	
+	
+	private GroundedAction translateAction(GroundedAction a, Map <String,String> matching){
+		String [] newParams = new String[a.params.length];
+		for(int i = 0; i < a.params.length; i++){
+			newParams[i] = matching.get(a.params[i]);
+		}
+		return new GroundedAction(a.action, newParams);
+	}
+	
+	
+	private double getComputedVForSH(StateHashTuple sh){
+		Double res = valueFunction.get(sh);
+		if(res == null){
+			return 0.;
+		}
+		return res;
+	}
+	
+	private double computeQ(State s, ActionTransitions trans){
+		
+		double q = 0.;
+		String aname = trans.ga.action.getName();
+		String [] aparams = trans.ga.params;
+		for(HashedTransitionProbability tp : trans.transitions){
+			double r = rf.reward(s, aname, aparams, tp.sh.s);
+			double vp = this.getComputedVForSH(tp.sh);
+			q += tp.p * (r + (this.gamma * vp));
+		}
+		
+		
+		return q;
+	}
+	
+	
+	
+	private StateHashTuple stateHash(State s){
+		return new StateHashTuple(s, attributesForHashCode);
+	}
+	
+	
+	
+	
+	
+	
+	
+
+	
+	
+}

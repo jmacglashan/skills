@@ -1,0 +1,17 @@
+1364846760523	Rename field 'randForTerminate'
+1364850652318	Rename type 'DPlannerPolicy'
+1364915290492	Change method 'reward'
+1364916705712	Rename method 'initiateRandom'
+1364916714300	Rename method 'initiate'
+1364916888546	Rename method 'initiateInState'
+1364917302405	Rename field 'discount'
+1364924406814	Move compilation unit
+1364924450451	Rename type 'HDHardHeuristic'
+1364924862920	Move compilation unit
+1365000968823	Rename local variable 'storedPSN'
+1365004130005	Rename type 'BestSearchFirstWClosed'
+1365006406457	Rename type 'BestFirstWClosed'
+1365006657481	Rename field 'lastComputedGScore'
+1365027987110	Rename local variable 'lastVistedNode'
+1365032044201	Rename method 'epsionWeight'
+1365095142057	Delete element

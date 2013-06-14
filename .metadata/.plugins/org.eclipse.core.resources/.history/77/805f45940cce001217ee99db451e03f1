@@ -1,0 +1,67 @@
+package edu.brown.cs.ai.behavior.oomdp.optiondiscovery.macros;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import edu.umbc.cs.maple.oomdp.GroundedAction;
+
+public class AllSequenceExtraction {
+
+	
+	
+	protected void getActionIdentifiers(List <GroundedAction> actionSequence, List <GroundedAction> uniqueIndex, Map<String, Integer> actionToIndex){
+		
+		for(GroundedAction ga : actionSequence){
+			String aname = ga.action.getName();
+
+			if(!actionToIndex.containsKey(aname)){
+				actionToIndex.put(aname, uniqueIndex.size());
+				uniqueIndex.add(ga);
+			}
+		}
+		
+	}
+	
+	protected List <Integer> convertActionsToIntegers(List <GroundedAction> actionSequnece, Map <String, Integer> actionToIndex){
+		
+		List <Integer> res = new ArrayList<Integer>(actionSequnece.size());
+		
+		for(GroundedAction ga : actionSequnece){
+			res.add(actionToIndex.get(ga.action.getName()));
+		}
+		
+		return res;
+
+	}
+	
+	protected void addUniqueSubsequencesOfSize(int n , List <Integer> sequence, Set <String> uniqueSubSequences){
+		
+		for(int i = 0; i < sequence.size()-n; i++){
+			int e = i + n;
+			StringBuffer buf = new StringBuffer(n*2);
+			buf.append(sequence.get(i));
+			for(int j = i+1; j < e; j++){
+				buf.append(",");
+				buf.append(sequence.get(j));
+			}
+			uniqueSubSequences.add(buf.toString());
+		}
+		
+	}
+	
+	List <GroundedAction> getActionSequenceForStringSubsequence(String seq, List <GroundedAction> uniqueIndex){
+		
+		List <GroundedAction> actionSequence = new ArrayList<GroundedAction>();
+		
+		String [] comps = seq.split(",");
+		for(int i = 0; i < comps.length; i++){
+			
+		}
+		
+		return actionSequence;
+		
+	}
+	
+}

@@ -1,0 +1,45 @@
+package edu.brown.cs.ai.behavior.oomdp.optiondiscovery.macros;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import edu.umbc.cs.maple.oomdp.GroundedAction;
+
+public class AllSequenceExtraction {
+
+	
+	
+	protected void getActionIdentifiers(List <GroundedAction> actionSequence, List <GroundedAction> uniqueIndex, Map<String, Integer> actionToIndex){
+		
+		for(GroundedAction ga : actionSequence){
+			String aname = ga.action.getName();
+
+			if(!actionToIndex.containsKey(aname)){
+				actionToIndex.put(aname, uniqueIndex.size());
+				uniqueIndex.add(ga);
+			}
+		}
+		
+	}
+	
+	protected List <Integer> convertActionsToIntegers(List <GroundedAction> actionSequnece, Map <String, Integer> actionToIndex){
+		
+		List <Integer> res = new ArrayList<Integer>(actionSequnece.size());
+		
+		for(GroundedAction ga : actionSequnece){
+			res.add(actionToIndex.get(ga.action.getName()));
+		}
+		
+		return res;
+
+	}
+	
+	protected void addUniqueSubsequencesOfSize(int n , List <Integer> sequence, Set <String> uniqueSubSequences){
+		
+		for(int i = 0; i < sequence.size()-n);
+		
+	}
+	
+}

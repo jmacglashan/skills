@@ -1,0 +1,68 @@
+package edu.brown.cs.ai.behavior.oomdp.learning.qlearning;
+
+import java.util.List;
+import java.util.Map;
+
+import edu.umbc.cs.maple.behavior.oomdp.Policy;
+import edu.umbc.cs.maple.behavior.oomdp.QValue;
+import edu.umbc.cs.maple.behavior.oomdp.planning.QComputablePlanner;
+import edu.umbc.cs.maple.behavior.oomdp.planning.StateHashTuple;
+import edu.umbc.cs.maple.oomdp.GroundedAction;
+import edu.umbc.cs.maple.oomdp.State;
+
+public class QLearning extends QComputablePlanner {
+
+	protected Map<StateHashTuple, QLearningStateNode>				qIndex;
+	protected double												qInit;
+	protected double												learningRate;
+	protected Policy												learningPolicy;
+	
+	protected int													maxEpisodeSize;
+	
+	
+	
+	public QLearning() {
+		// TODO Auto-generated constructor stub
+	}
+
+	@Override
+	public List<QValue> getQs(State s) {
+		return this.getQs(this.stateHash(s));
+	}
+
+	@Override
+	public QValue getQ(State s, GroundedAction a) {
+		return this.getQ(this.stateHash(s), a);
+	}
+	
+	
+
+	public List<QValue> getQs(StateHashTuple s) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	public QValue getQ(StateHashTuple s, GroundedAction a) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void planFromState(State initialState) {
+		
+		StateHashTuple curState = this.stateHash(initialState);
+		int eCounter = 0;
+		
+		while(tf.isTerminal(curState.s) && eCounter < maxEpisodeSize){
+			
+			GroundedAction action = learningPolicy.getAction(curState.s);
+			QValue curQ = this.getQ(curState.s, action);
+			
+			eCounter++;
+		}
+		
+
+	}
+
+}

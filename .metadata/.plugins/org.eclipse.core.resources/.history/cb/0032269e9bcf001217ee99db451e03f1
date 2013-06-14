@@ -1,0 +1,77 @@
+package edu.brown.cs.ai.behavior.oomdp.optiondiscovery.macros.macrotraining;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+import edu.brown.cs.ai.behavior.oomdp.options.MacroAction;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.DeterministicPlanner;
+import edu.umbc.cs.maple.oomdp.Action;
+import edu.umbc.cs.maple.oomdp.GroundedAction;
+import edu.umbc.cs.maple.oomdp.State;
+
+public class MacroTrainingPlanner extends DeterministicPlanner {
+
+	protected List <Action>								baseActions;
+	protected List<List<MacroAction>>					macroLevels;
+	protected boolean									optionsFirst;
+	protected Random									rand;
+	
+	@Override
+	public void planFromState(State initialState) {
+		// TODO Auto-generated method stub
+
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	//assumes that gas are ordered with options first
+	protected int numOptionsInGAs(List <GroundedAction> gas){
+		for(int i = 0; i < gas.size(); i++){
+			if(gas.get(i).action.isPrimitive()){
+				return i;
+			}
+		}
+		return gas.size();
+	}
+	
+	//suffle elements on [s, e)
+	protected void shuffleGroundedActions(List <GroundedAction> gas, int s, int e){
+		
+		int r = e-s;
+		
+		for(int i = s; i < e; i++){
+			GroundedAction ga = gas.get(i);
+			int j = rand.nextInt(r) + s;
+			gas.set(i, gas.get(j));
+			gas.set(j, ga);
+		}
+		
+	}
+	
+	
+	
+	protected void sortActionsWithOptionsFirst(){
+		List <Action> sactions = new ArrayList<Action>(actions.size());
+		for(Action a : actions){
+			if(!a.isPrimitive()){
+				sactions.add(a);
+			}
+		}
+		for(Action a : actions){
+			if(a.isPrimitive()){
+				sactions.add(a);
+			}
+		}
+		
+		actions = sactions;
+	}
+
+}

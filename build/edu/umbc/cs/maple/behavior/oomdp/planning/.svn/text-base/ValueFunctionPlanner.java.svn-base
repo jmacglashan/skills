@@ -1,0 +1,17 @@
+package edu.umbc.cs.maple.behavior.oomdp.planning;
+
+import java.util.List;
+
+import edu.umbc.cs.maple.behavior.oomdp.QValue;
+import edu.umbc.cs.maple.oomdp.GroundedAction;
+import edu.umbc.cs.maple.oomdp.State;
+
+public interface ValueFunctionPlanner {
+
+	
+	
+	public void planFromState(State initialState);
+	public List <QValue> getQs(State s);
+	public QValue getQ(State s, GroundedAction a);
+	
+}

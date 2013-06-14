@@ -1,0 +1,8 @@
+1367764259718	Rename type 'DPlannerSubgoalOption'
+1367764911060	Rename type 'GoalCondition'
+1367764929712	Rename method 'isGoal'
+1367764962341	Move compilation unit
+1367767305686	Rename type 'DPolicySubgoalOption'
+1367767578948	Rename field 'subgoal'
+1367769998961	Rename type 'MultiStateDPrePlanner'
+1367863463668	Delete element

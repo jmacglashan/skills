@@ -1,0 +1,34 @@
+package edu.umbc.cs.maple.oomdp;
+
+public abstract class RewardFunction {
+	
+	protected Domain		domain_; //the domain on which this reward function operates
+	
+	public RewardFunction(){
+		
+	}
+	
+	public RewardFunction(Domain domain){
+		domain_ = domain;
+	}
+	
+	public void setDomain(Domain domain){
+		domain_ = domain;
+	}
+	
+	public Domain getDomain(){
+		return domain_;
+	}
+	
+	public final double reward(State s, String a, State sprime){
+		return reward(s, a, new String[0], sprime);
+	}
+	
+	public final double reward(State s, String a, String params, State sprime){
+		return reward(s, params, params.split(","), sprime);
+	}
+	
+	//note that params are the parameters for the action
+	public abstract double reward(State s, String a, String [] params, State sprime);
+
+}

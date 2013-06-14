@@ -1,0 +1,49 @@
+package edu.brown.cs.ai.experiments.planning.fourrooms;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import edu.brown.cs.ai.behavior.oomdp.optiondiscovery.macros.macrotraining.MacroTrainingAgent;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.SinglePFTF;
+import edu.brown.cs.ai.behavior.oomdp.planning.deterministc.TFGoalCondition;
+import edu.brown.cs.ai.domain.oomdp.fourrooms.FourRoomsDomain;
+import edu.umbc.cs.maple.oomdp.Attribute;
+import edu.umbc.cs.maple.oomdp.Domain;
+
+public class FourRoomsMacroTrainingExp {
+
+	protected MacroTrainingAgent			mta;
+	
+	
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+	
+	
+	public FourRoomsMacroTrainingExp(){
+		
+		Domain d = (new FourRoomsDomain()).generateDomain();
+		
+		Map<String, List<Attribute>> attributesForHashCode = new HashMap<String, List<Attribute>>();
+		
+		List <Attribute> agentAtts = new ArrayList<Attribute>();
+		agentAtts.add(d.getAttribute(FourRoomsDomain.ATTX));
+		agentAtts.add(d.getAttribute(FourRoomsDomain.ATTY));
+		attributesForHashCode.put(FourRoomsDomain.CLASSAGENT, agentAtts);
+		
+		List <Attribute> goalAtts = new ArrayList<Attribute>(agentAtts);
+		attributesForHashCode.put(FourRoomsDomain.CLASSGOAL, goalAtts);
+		
+		tf = new SinglePFTF(d.getPropFunction(FourRoomsDomain.PFATGOAL));
+		gc = new TFGoalCondition(tf);
+		
+	}
+	
+	
+
+}

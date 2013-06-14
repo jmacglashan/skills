@@ -1,0 +1,14 @@
+package edu.brown.cs.ai.behavior.oomdp.optiondiscovery.macros.macrotraining;
+
+import edu.umbc.cs.maple.behavior.oomdp.planning.OOMDPPlanner;
+import edu.umbc.cs.maple.oomdp.State;
+
+public class MacroTrainingAgent extends OOMDPPlanner {
+
+	@Override
+	public void planFromState(State initialState) {
+		// TODO Auto-generated method stub
+
+	}
+
+}
